@@ -97,7 +97,7 @@
           <div class="section-head compact-head">
             <div>
               <h2>throttle</h2>
-              <p>Throttle settings are shared, exported, and previewed with the setup.</p>
+              <p>Throttle settings are shared and exported with the setup.</p>
             </div>
           </div>
           <div class="field-grid throttle-grid">
@@ -114,14 +114,6 @@
               <input id="throttleExpo" type="number" min="0" max="1" step="0.01">
             </label>
           </div>
-          <div class="throttle-preview">
-            <div class="throttle-preview-head">
-              <span>throttle curve preview</span>
-              <span>input → output</span>
-            </div>
-            <canvas id="throttleCanvas" width="800" height="240" aria-label="Throttle curve preview"></canvas>
-            <div class="graph-stats throttle-stats" id="throttleStats"></div>
-          </div>
         </section>
       </section>
 
@@ -135,6 +127,23 @@
         <canvas id="curveCanvas" width="800" height="520" aria-label="Rate curve graph"></canvas>
         <div class="graph-stats" id="graphStats"></div>
       </section>
+    </section>
+
+    <section class="card throttle-panel">
+      <div class="section-head">
+        <div>
+          <h2>throttle curve</h2>
+          <p>Preview Hover Point, Throttle Mid, and Throttle Expo as a Betaflight-style input to output curve.</p>
+        </div>
+      </div>
+      <div class="throttle-preview">
+        <div class="throttle-preview-head">
+          <span>throttle curve preview</span>
+          <span>input → output</span>
+        </div>
+        <canvas id="throttleCanvas" width="800" height="240" aria-label="Throttle curve preview"></canvas>
+        <div class="graph-stats throttle-stats" id="throttleStats"></div>
+      </div>
     </section>
 
     <section class="workflow-grid editor-only">
