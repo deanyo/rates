@@ -218,11 +218,12 @@ function drawGraph() {
   const ctx = canvas.getContext("2d");
   const width = canvas.width;
   const height = canvas.height;
+  const plottedAxes = getPlottedAxes();
   const padding = { top: 18, right: 18, bottom: 28, left: 18 };
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;
   const maxRate = Math.ceil(
-    Math.max(...AXES.flatMap((axis) => [Math.abs(sampleAxis(axis, -1)), Math.abs(sampleAxis(axis, 1))])) / 200,
+    Math.max(...plottedAxes.flatMap(({ axis }) => [Math.abs(sampleAxis(axis, -1)), Math.abs(sampleAxis(axis, 1))])) / 200,
   ) * 200;
   const centerX = padding.left + plotWidth / 2;
   const centerY = padding.top + plotHeight / 2;
@@ -277,9 +278,9 @@ function drawGraph() {
   ctx.fillText("0", centerX - 3, height - 8);
   ctx.fillText("+100%", width - padding.right - 34, height - 8);
 
-  for (const axis of AXES) {
+  for (const { axis, color } of plottedAxes) {
     ctx.beginPath();
-    ctx.strokeStyle = AXIS_COLORS[axis];
+    ctx.strokeStyle = color;
     ctx.lineWidth = 2.5;
 
     for (let rc = -500; rc <= 500; rc += 2) {
@@ -297,12 +298,26 @@ function drawGraph() {
     ctx.stroke();
   }
 
-  elements.graphStats.innerHTML = AXES.map((axis) => {
-    const color = AXIS_COLORS[axis];
+  elements.graphStats.innerHTML = plottedAxes.map(({ axis, color, label }) => {
     const center = Math.round(Math.abs(sampleAxis(axis, 0.5)));
     const max = Math.round(sampleAxis(axis, 1));
-    return `<span class="graph-stat"><span style="color:${color}">${axis}</span> 50% stick ${center} deg/s · max ${max} deg/s</span>`;
+    return `<span class="graph-stat"><span style="color:${color}">${label}</span> 50% stick ${center} deg/s · max ${max} deg/s</span>`;
   }).join("");
+}
+
+function getPlottedAxes() {
+  if (state.linkedAxes) {
+    return [
+      { axis: "roll", color: AXIS_COLORS.roll, label: "roll / pitch" },
+      { axis: "yaw", color: AXIS_COLORS.yaw, label: "yaw" },
+    ];
+  }
+
+  return AXES.map((axis) => ({
+    axis,
+    color: AXIS_COLORS[axis],
+    label: axis,
+  }));
 }
 
 function sampleAxis(axis, stick) {
