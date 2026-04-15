@@ -560,18 +560,10 @@ function loadViewFromUrl() {
 function applyViewMode() {
   document.body.classList.toggle("share-view", isShareView);
   elements.shareViewSection.hidden = !isShareView;
-  elements.subtitle.hidden = !isShareView;
-  elements.heroMarkers.hidden = !isShareView;
-
-  if (isShareView) {
-    elements.subtitle.textContent = "shared setup";
-    elements.heroMarkers.innerHTML = `
-      <span class="hero-chip">${RATE_MODELS[state.rateType].label.toLowerCase()}</span>
-    `;
-  } else {
-    elements.subtitle.textContent = "";
-    elements.heroMarkers.innerHTML = "";
-  }
+  elements.subtitle.hidden = true;
+  elements.heroMarkers.hidden = true;
+  elements.subtitle.textContent = "";
+  elements.heroMarkers.innerHTML = "";
 }
 
 function readNumberParam(params, key, fallback) {
