@@ -31,6 +31,10 @@
         <div class="summary-value" id="summaryPilot">dean's rates</div>
       </article>
       <article class="summary-card">
+        <div class="summary-label">setup</div>
+        <div class="summary-value" id="summaryName">indoor daily</div>
+      </article>
+      <article class="summary-card">
         <div class="summary-label">rate type</div>
         <div class="summary-value" id="summaryType">Actual</div>
       </article>
@@ -53,6 +57,14 @@
           <label class="field">
             <span>pilot tag</span>
             <input id="pilotName" type="text" placeholder="dean">
+          </label>
+          <label class="field">
+            <span>setup name</span>
+            <input id="setupName" type="text" placeholder="indoor daily">
+          </label>
+          <label class="field">
+            <span>betaflight version</span>
+            <input id="bfVersion" type="text" placeholder="4.5">
           </label>
           <label class="field">
             <span>rate type</span>
@@ -135,6 +147,23 @@
           <button id="copyCliButton" class="secondary-btn">copy cli block</button>
         </div>
       </section>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <div>
+          <h2>cli import</h2>
+          <p>paste Betaflight CLI rate lines here to fill the UI. comments and unrelated lines are ignored.</p>
+        </div>
+      </div>
+      <label class="field">
+        <span>paste cli</span>
+        <textarea id="cliImportInput" rows="10" placeholder="set rates_type = ACTUAL&#10;set roll_rc_rate = 72.5&#10;set roll_expo = 32&#10;set roll_srate = 640"></textarea>
+      </label>
+      <div class="action-row">
+        <button id="importCliButton" class="primary-btn">import cli</button>
+        <button id="clearCliImportButton" class="ghost-btn">clear paste</button>
+      </div>
     </section>
 
     <section class="card">

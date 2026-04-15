@@ -28,6 +28,8 @@ const RATE_MODELS = {
 
 const DEFAULT_STATE = {
   pilotName: "dean",
+  setupName: "indoor daily",
+  bfVersion: "4.5",
   rateType: "ACTUAL",
   linkedAxes: true,
   axes: {
@@ -43,6 +45,8 @@ const DEFAULT_STATE = {
 
 const elements = {
   pilotName: document.getElementById("pilotName"),
+  setupName: document.getElementById("setupName"),
+  bfVersion: document.getElementById("bfVersion"),
   rateType: document.getElementById("rateType"),
   linkedAxes: document.getElementById("linkedAxes"),
   axisGrid: document.getElementById("axisGrid"),
@@ -55,11 +59,15 @@ const elements = {
   graphDescription: document.getElementById("graphDescription"),
   graphStats: document.getElementById("graphStats"),
   summaryPilot: document.getElementById("summaryPilot"),
+  summaryName: document.getElementById("summaryName"),
   summaryType: document.getElementById("summaryType"),
   summaryRoll: document.getElementById("summaryRoll"),
   copyShareButton: document.getElementById("copyShareButton"),
   copyCliButton: document.getElementById("copyCliButton"),
   resetButton: document.getElementById("resetButton"),
+  cliImportInput: document.getElementById("cliImportInput"),
+  importCliButton: document.getElementById("importCliButton"),
+  clearCliImportButton: document.getElementById("clearCliImportButton"),
   statusStrip: document.getElementById("statusStrip"),
 };
 
@@ -78,6 +86,16 @@ function bindEvents() {
 
   elements.pilotName.addEventListener("input", () => {
     state.pilotName = sanitizePilotName(elements.pilotName.value);
+    refreshAll();
+  });
+
+  elements.setupName.addEventListener("input", () => {
+    state.setupName = sanitizeSetupName(elements.setupName.value);
+    refreshAll();
+  });
+
+  elements.bfVersion.addEventListener("input", () => {
+    state.bfVersion = sanitizeVersion(elements.bfVersion.value);
     refreshAll();
   });
 
@@ -104,6 +122,15 @@ function bindEvents() {
     await copyText(elements.cliOutput.value, "cli block copied.");
   });
 
+  elements.importCliButton.addEventListener("click", () => {
+    importCliText(elements.cliImportInput.value);
+  });
+
+  elements.clearCliImportButton.addEventListener("click", () => {
+    elements.cliImportInput.value = "";
+    setStatus("cli paste cleared.");
+  });
+
   elements.resetButton.addEventListener("click", () => {
     Object.assign(state, cloneState(DEFAULT_STATE));
     renderAxisInputs();
@@ -115,6 +142,8 @@ function bindEvents() {
 function renderAxisInputs() {
   const model = RATE_MODELS[state.rateType];
   elements.pilotName.value = state.pilotName;
+  elements.setupName.value = state.setupName;
+  elements.bfVersion.value = state.bfVersion;
   elements.rateType.value = state.rateType;
   elements.linkedAxes.checked = state.linkedAxes;
   elements.throttleMid.value = formatDecimal(state.throttle.mid, 2);
@@ -321,7 +350,8 @@ function updateShareUrl() {
 function updateCliOutput() {
   const lines = [
     "rateprofile 0",
-    `# ${getShareLabel()}`,
+    `# ${getFullShareLabel()}`,
+    `# Betaflight ${state.bfVersion}`,
     `set rates_type = ${state.rateType}`,
   ];
 
@@ -340,6 +370,7 @@ function updateCliOutput() {
 
 function updateSummary() {
   elements.summaryPilot.textContent = getShareLabel();
+  elements.summaryName.textContent = state.setupName;
   elements.summaryType.textContent = RATE_MODELS[state.rateType].label;
   elements.summaryRoll.textContent = `${Math.round(sampleAxis("roll", 1))} deg/s`;
 }
@@ -347,6 +378,8 @@ function updateSummary() {
 function serializeState(current) {
   const params = new URLSearchParams();
   params.set("pilot", current.pilotName);
+  params.set("name", current.setupName);
+  params.set("bf", current.bfVersion);
   params.set("type", current.rateType);
   params.set("link", current.linkedAxes ? "1" : "0");
   params.set("thrMid", formatDecimal(current.throttle.mid, 2));
@@ -372,6 +405,8 @@ function loadStateFromUrl() {
   }
 
   nextState.pilotName = sanitizePilotName(params.get("pilot") || nextState.pilotName);
+  nextState.setupName = sanitizeSetupName(params.get("name") || nextState.setupName);
+  nextState.bfVersion = sanitizeVersion(params.get("bf") || nextState.bfVersion);
 
   if (params.has("link")) {
     nextState.linkedAxes = params.get("link") !== "0";
@@ -393,6 +428,8 @@ function loadStateFromUrl() {
 function sanitizeState(current) {
   const fields = RATE_MODELS[current.rateType].fields;
   current.pilotName = sanitizePilotName(current.pilotName);
+  current.setupName = sanitizeSetupName(current.setupName);
+  current.bfVersion = sanitizeVersion(current.bfVersion);
   current.throttle.mid = clampNumber(current.throttle.mid, 0, 1);
   current.throttle.expo = clampNumber(current.throttle.expo, 0, 1);
   for (const axis of AXES) {
@@ -421,9 +458,21 @@ function sanitizePilotName(value) {
   return `${value || ""}`.trim().replace(/\s+/g, " ").slice(0, 40) || "pilot";
 }
 
+function sanitizeSetupName(value) {
+  return `${value || ""}`.trim().replace(/\s+/g, " ").slice(0, 60) || "untitled setup";
+}
+
+function sanitizeVersion(value) {
+  return `${value || ""}`.trim().replace(/[^0-9.]/g, "").slice(0, 12) || "4.5";
+}
+
 function getShareLabel() {
   const pilot = state.pilotName.endsWith("s") ? `${state.pilotName}' rates` : `${state.pilotName}'s rates`;
   return pilot;
+}
+
+function getFullShareLabel() {
+  return `${getShareLabel()} · ${state.setupName}`;
 }
 
 function formatDecimal(value, digits) {
@@ -449,4 +498,95 @@ async function copyText(value, successMessage) {
 
 function setStatus(message) {
   elements.statusStrip.textContent = message;
+}
+
+function importCliText(text) {
+  const lines = `${text || ""}`.split(/\r?\n/);
+  let importedAnything = false;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#") || line.startsWith("//")) {
+      continue;
+    }
+
+    const match = line.match(/^set\s+([a-zA-Z0-9_]+)\s*=\s*(.+)$/);
+    if (!match) {
+      continue;
+    }
+
+    const key = match[1];
+    const value = match[2].trim();
+    importedAnything = applyCliValue(key, value) || importedAnything;
+  }
+
+  if (!importedAnything) {
+    setStatus("no usable rate settings found in pasted cli.");
+    return;
+  }
+
+  renderAxisInputs();
+  refreshAll();
+  setStatus("imported cli settings.");
+}
+
+function applyCliValue(key, rawValue) {
+  const normalizedKey = key.toLowerCase();
+
+  if (normalizedKey === "rates_type") {
+    const normalizedValue = rawValue.toUpperCase();
+    if (RATE_MODELS[normalizedValue]) {
+      state.rateType = normalizedValue;
+      return true;
+    }
+    return false;
+  }
+
+  if (normalizedKey === "thr_mid") {
+    state.throttle.mid = parseCliPercent(rawValue);
+    return true;
+  }
+
+  if (normalizedKey === "thr_expo") {
+    state.throttle.expo = parseCliPercent(rawValue);
+    return true;
+  }
+
+  const axisMatch = normalizedKey.match(/^(roll|pitch|yaw)_(rc_rate|expo|srate)$/);
+  if (!axisMatch) {
+    return false;
+  }
+
+  const [, axis, field] = axisMatch;
+  const axisState = state.axes[axis];
+
+  if (field === "expo") {
+    axisState.expo = parseCliPercent(rawValue);
+    return true;
+  }
+
+  if (field === "rc_rate") {
+    axisState.rcRate = Number(rawValue);
+    return Number.isFinite(axisState.rcRate);
+  }
+
+  if (field === "srate") {
+    axisState.sRate = Number(rawValue);
+    return Number.isFinite(axisState.sRate);
+  }
+
+  return false;
+}
+
+function parseCliPercent(rawValue) {
+  const numeric = Number(rawValue);
+  if (!Number.isFinite(numeric)) {
+    return 0;
+  }
+
+  if (numeric > 1) {
+    return clampNumber(numeric / 100, 0, 1);
+  }
+
+  return clampNumber(numeric, 0, 1);
 }
