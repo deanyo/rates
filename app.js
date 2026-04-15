@@ -38,6 +38,7 @@ const DEFAULT_STATE = {
     yaw: { rcRate: 110, sRate: 600, expo: 0.17 },
   },
   throttle: {
+    hover: 0.5,
     mid: 0.5,
     expo: 0.01,
   },
@@ -52,8 +53,11 @@ const elements = {
   rateType: document.getElementById("rateType"),
   linkedAxes: document.getElementById("linkedAxes"),
   axisGrid: document.getElementById("axisGrid"),
+  throttleHover: document.getElementById("throttleHover"),
   throttleMid: document.getElementById("throttleMid"),
   throttleExpo: document.getElementById("throttleExpo"),
+  throttleCanvas: document.getElementById("throttleCanvas"),
+  throttleStats: document.getElementById("throttleStats"),
   curveCanvas: document.getElementById("curveCanvas"),
   shareUrl: document.getElementById("shareUrl"),
   shareLabel: document.getElementById("shareLabel"),
@@ -109,7 +113,13 @@ function bindEvents() {
 
   elements.linkedAxes.addEventListener("change", () => {
     state.linkedAxes = elements.linkedAxes.checked;
+    refreshAll();
     setStatus(state.linkedAxes ? "roll and pitch are linked." : "roll and pitch are unlinked.");
+  });
+
+  elements.throttleHover.addEventListener("input", () => {
+    state.throttle.hover = clampNumber(Number(elements.throttleHover.value), 0, 1);
+    refreshAll();
   });
 
   elements.throttleMid.addEventListener("input", () => {
@@ -162,6 +172,7 @@ function renderAxisInputs() {
   elements.bfVersion.value = state.bfVersion;
   elements.rateType.value = state.rateType;
   elements.linkedAxes.checked = state.linkedAxes;
+  elements.throttleHover.value = formatDecimal(state.throttle.hover, 2);
   elements.throttleMid.value = formatDecimal(state.throttle.mid, 2);
   elements.throttleExpo.value = formatDecimal(state.throttle.expo, 2);
   elements.graphDescription.textContent = model.summary;
@@ -224,6 +235,7 @@ function setAxisValue(axis, key, value) {
 function refreshAll() {
   sanitizeState(state);
   drawGraph();
+  drawThrottleGraph();
   updateShareUrl();
   updateCliOutput();
   updateSummary();
@@ -323,6 +335,92 @@ function drawGraph() {
   }).join("");
 }
 
+function drawThrottleGraph() {
+  const canvas = elements.throttleCanvas;
+  const ctx = canvas.getContext("2d");
+  const width = canvas.width;
+  const height = canvas.height;
+  const padding = { top: 18, right: 18, bottom: 28, left: 18 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const hover = state.throttle.hover;
+  const mid = state.throttle.mid;
+  const expo = state.throttle.expo;
+  const curve = computeThrottleCurveParams(plotWidth, plotHeight, mid, hover, expo);
+
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = "#0b0a11";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.save();
+  ctx.translate(padding.left, padding.top);
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  ctx.lineWidth = 1;
+
+  for (let i = 1; i <= 4; i += 1) {
+    const x = (plotWidth * i) / 5;
+    const y = (plotHeight * i) / 5;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, plotHeight);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(plotWidth, y);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = "rgba(255,255,255,0.18)";
+  ctx.beginPath();
+  ctx.moveTo(0, plotHeight);
+  ctx.lineTo(plotWidth, 0);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#ffbf7e";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(0, plotHeight);
+  ctx.quadraticCurveTo(curve.midXl, curve.midYl, curve.midX, curve.midY);
+  ctx.quadraticCurveTo(curve.midXr, curve.midYr, plotWidth, curve.topY);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffbf7e";
+  ctx.beginPath();
+  ctx.arc(curve.midX, curve.midY, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#a79eb8";
+  ctx.font = '10px "JetBrains Mono"';
+  ctx.fillText("100", 4, 10);
+  ctx.fillText("0", 4, plotHeight - 4);
+  ctx.fillText("0", 0, plotHeight + 18);
+  ctx.fillText("100", plotWidth - 18, plotHeight + 18);
+  ctx.restore();
+
+  elements.throttleStats.innerHTML = [
+    `<span class="graph-stat">hover point ${formatPercent(hover)}</span>`,
+    `<span class="graph-stat">throttle mid ${formatPercent(mid)}</span>`,
+    `<span class="graph-stat">throttle expo ${formatDisplayValue(expo)}</span>`,
+    `<span class="graph-stat">mid maps to ${formatPercent(hover)} output</span>`,
+  ].join("");
+}
+
+function computeThrottleCurveParams(canvasWidth, canvasHeight, mid, hover, expo) {
+  const topY = 0;
+  const midX = canvasWidth * mid;
+  const midY = canvasHeight * (1 - hover);
+
+  return {
+    topY,
+    midX,
+    midY,
+    midXl: midX * 0.5,
+    midYl: canvasHeight - (canvasHeight - midY) * 0.5 * (expo + 1),
+    midXr: (canvasWidth + midX) * 0.5,
+    midYr: topY + (midY - topY) * 0.5 * (expo + 1),
+  };
+}
+
 function getPlottedAxes() {
   if (state.linkedAxes) {
     return [
@@ -397,6 +495,7 @@ function updateCliOutput() {
     lines.push(`set ${axis}_srate = ${Math.round(values.sRate)}`);
   }
 
+  lines.push(`set thr_hover = ${Math.round(state.throttle.hover * 100)}`);
   lines.push(`set thr_mid = ${Math.round(state.throttle.mid * 100)}`);
   lines.push(`set thr_expo = ${Math.round(state.throttle.expo * 100)}`);
   lines.push("save");
@@ -459,6 +558,10 @@ function renderThrottleCard() {
       <div class="share-rate-model">Betaflight</div>
       <div class="share-rate-rows">
         <div class="share-rate-row">
+          <span>hover point</span>
+          <strong>${formatDisplayValue(state.throttle.hover)}</strong>
+        </div>
+        <div class="share-rate-row">
           <span>throttle mid</span>
           <strong>${formatDisplayValue(state.throttle.mid)}</strong>
         </div>
@@ -478,6 +581,7 @@ function serializeState(current) {
   params.set("bf", current.bfVersion);
   params.set("type", current.rateType);
   params.set("link", current.linkedAxes ? "1" : "0");
+  params.set("thrHover", formatDecimal(current.throttle.hover, 2));
   params.set("thrMid", formatDecimal(current.throttle.mid, 2));
   params.set("thrEx", formatDecimal(current.throttle.expo, 2));
 
@@ -520,6 +624,7 @@ function loadStateFromUrl() {
     nextState.linkedAxes = params.get("link") !== "0";
   }
 
+  nextState.throttle.hover = readNumberParam(params, "thrHover", nextState.throttle.hover);
   nextState.throttle.mid = readNumberParam(params, "thrMid", nextState.throttle.mid);
   nextState.throttle.expo = readNumberParam(params, "thrEx", nextState.throttle.expo);
 
@@ -538,6 +643,7 @@ function sanitizeState(current) {
   current.pilotName = sanitizePilotName(current.pilotName);
   current.setupName = sanitizeSetupName(current.setupName);
   current.bfVersion = sanitizeVersion(current.bfVersion);
+  current.throttle.hover = clampNumber(current.throttle.hover, 0, 1);
   current.throttle.mid = clampNumber(current.throttle.mid, 0, 1);
   current.throttle.expo = clampNumber(current.throttle.expo, 0, 1);
   for (const axis of AXES) {
@@ -609,6 +715,10 @@ function formatDisplayValue(value) {
   return formatDecimal(value, 2);
 }
 
+function formatPercent(value) {
+  return `${Math.round(clampNumber(value, 0, 1) * 100)}%`;
+}
+
 function clampNumber(value, min, max) {
   if (!Number.isFinite(value)) {
     return min;
@@ -670,6 +780,11 @@ function applyCliValue(key, rawValue) {
       return true;
     }
     return false;
+  }
+
+  if (normalizedKey === "thr_hover") {
+    state.throttle.hover = parseCliPercent(rawValue);
+    return true;
   }
 
   if (normalizedKey === "thr_mid") {

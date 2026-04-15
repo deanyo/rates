@@ -9,8 +9,9 @@ The current version focuses on a practical GitHub Pages workflow:
 - set up `Actual` or `Betaflight` rates in the browser
 - add a pilot tag so shared links feel like named setups
 - add a setup name and Betaflight version tag to shared state
-- include throttle mid and throttle expo in shared state and CLI export
+- include hover point, throttle mid, and throttle expo in shared state and CLI export
 - inspect the curve graph live
+- inspect a throttle curve preview for modern Betaflight throttle shaping
 - share the exact setup via URL, with a read-only share view and an edit link back to the full tool
 - copy a CLI block for Betaflight
 - import from pasted Betaflight CLI lines
@@ -26,6 +27,7 @@ The current version focuses on a practical GitHub Pages workflow:
 - pilot tag in shared setups
 - setup name and `bf` version tag
 - throttle mid and throttle expo fields
+- hover point, throttle mid, and throttle expo fields
 - CLI export
 - CLI import
 
