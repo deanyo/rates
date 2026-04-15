@@ -50,7 +50,7 @@ body::before {
 
 .hero {
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 
 .hero h1,
@@ -69,8 +69,27 @@ body::before {
 
 .subtitle {
   color: var(--muted);
-  font-size: 13px;
-  margin-bottom: 16px;
+  font-size: 14px;
+  margin-bottom: 18px;
+  text-transform: lowercase;
+}
+
+.hero-markers {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hero-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(44, 39, 61, 0.58);
+  color: var(--accent-3);
+  font-size: 11px;
   text-transform: lowercase;
 }
 
@@ -97,12 +116,19 @@ body::before {
 
 .summary-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 18px;
+  margin-bottom: 22px;
 }
 
 .main-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-bottom: 18px;
+  margin-bottom: 22px;
+}
+
+.workflow-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-bottom: 22px;
 }
 
 .field-grid {
@@ -131,11 +157,14 @@ body::before {
 }
 
 .summary-card {
-  padding: 16px 18px;
+  padding: 18px 18px;
+  background:
+    linear-gradient(135deg, rgba(134, 199, 255, 0.06), transparent 70%),
+    var(--bg-2);
 }
 
 .card {
-  padding: 20px;
+  padding: 22px;
 }
 
 .summary-label,
@@ -152,7 +181,7 @@ body::before {
 
 .summary-value {
   color: var(--accent);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
 }
 
@@ -225,6 +254,23 @@ textarea:focus {
   background: rgba(44, 39, 61, 0.46);
 }
 
+.setup-card,
+.graph-card,
+.workflow-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.setup-card::before,
+.graph-card::before,
+.workflow-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, rgba(147, 241, 198, 0.045), transparent 55%);
+  pointer-events: none;
+}
+
 .throttle-card {
   margin-top: 18px;
   padding: 14px;
@@ -271,7 +317,11 @@ textarea:focus {
 }
 
 .graph-stats {
-  margin-top: 12px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(44, 39, 61, 0.4);
 }
 
 #curveCanvas {
@@ -288,6 +338,10 @@ textarea:focus {
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 14px;
+}
+
+.import-card {
+  grid-column: 1 / -1;
 }
 
 .primary-btn,
@@ -349,7 +403,8 @@ code {
   .summary-grid,
   .main-grid,
   .field-grid,
-  .axis-grid {
+  .axis-grid,
+  .workflow-grid {
     grid-template-columns: 1fr;
   }
 }

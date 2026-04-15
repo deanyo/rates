@@ -19,6 +19,11 @@
     <header class="hero">
       <h1>rates</h1>
       <p class="subtitle">dial in betaflight rates, inspect the curve, and share the exact setup</p>
+      <div class="hero-markers">
+        <span class="hero-chip">actual + betaflight</span>
+        <span class="hero-chip">shareable urls</span>
+        <span class="hero-chip">cli import/export</span>
+      </div>
     </header>
 
     <section class="summary-grid">
@@ -41,7 +46,7 @@
     </section>
 
     <section class="main-grid">
-      <section class="card">
+      <section class="card setup-card">
         <div class="section-head">
           <div>
             <h2>setup</h2>
@@ -97,7 +102,7 @@
         </section>
       </section>
 
-      <section class="card">
+      <section class="card graph-card">
         <div class="section-head">
           <div>
             <h2>curve</h2>
@@ -109,8 +114,8 @@
       </section>
     </section>
 
-    <section class="main-grid">
-      <section class="card">
+    <section class="workflow-grid">
+      <section class="card workflow-card share-card">
         <div class="section-head">
           <div>
             <h2>share</h2>
@@ -128,7 +133,7 @@
         <div class="share-label" id="shareLabel">dean's rates</div>
       </section>
 
-      <section class="card">
+      <section class="card workflow-card export-card">
         <div class="section-head">
           <div>
             <h2>cli export</h2>
@@ -143,9 +148,8 @@
           <button id="copyCliButton" class="secondary-btn">copy cli block</button>
         </div>
       </section>
-    </section>
 
-    <section class="card">
+      <section class="card workflow-card import-card">
       <div class="section-head">
         <div>
           <h2>cli import</h2>
@@ -160,6 +164,7 @@
         <button id="importCliButton" class="primary-btn">import cli</button>
         <button id="clearCliImportButton" class="ghost-btn">clear paste</button>
       </div>
+      </section>
     </section>
 
     <footer class="footer">
