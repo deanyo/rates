@@ -398,10 +398,9 @@ function drawThrottleGraph() {
   ctx.restore();
 
   elements.throttleStats.innerHTML = [
-    `<span class="graph-stat">hover point ${formatPercent(hover)}</span>`,
-    `<span class="graph-stat">throttle mid ${formatPercent(mid)}</span>`,
-    `<span class="graph-stat">throttle expo ${formatDisplayValue(expo)}</span>`,
-    `<span class="graph-stat">mid maps to ${formatPercent(hover)} output</span>`,
+    `<span class="graph-stat"><span style="color:#ffbf7e">hover point</span> ${formatPercent(hover)}</span>`,
+    `<span class="graph-stat"><span style="color:#ffbf7e">throttle mid</span> ${formatPercent(mid)}</span>`,
+    `<span class="graph-stat"><span style="color:#ffbf7e">throttle expo</span> ${formatDisplayValue(expo)}</span>`,
   ].join("");
 }
 
