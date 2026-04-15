@@ -5,6 +5,8 @@ Rates is a static browser tool for exploring and sharing FPV rate setups.
 This first pass focuses on a practical GitHub Pages workflow:
 
 - set up `Actual` or `Betaflight` rates in the browser
+- add a pilot tag so shared links feel like named setups
+- include throttle mid and throttle expo in shared state and CLI export
 - inspect the curve graph live
 - share the exact setup via URL
 - copy a CLI block for Betaflight
@@ -17,6 +19,8 @@ This first pass focuses on a practical GitHub Pages workflow:
 - optional roll/pitch linking
 - live graph
 - shareable URL state
+- pilot tag in shared setups
+- throttle mid and throttle expo fields
 - CLI export
 
 ## Important Note

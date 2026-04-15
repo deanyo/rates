@@ -27,16 +27,16 @@
 
     <section class="summary-grid">
       <article class="summary-card">
+        <div class="summary-label">pilot</div>
+        <div class="summary-value" id="summaryPilot">dean's rates</div>
+      </article>
+      <article class="summary-card">
         <div class="summary-label">rate type</div>
         <div class="summary-value" id="summaryType">Actual</div>
       </article>
       <article class="summary-card">
         <div class="summary-label">roll max</div>
         <div class="summary-value" id="summaryRoll">670 deg/s</div>
-      </article>
-      <article class="summary-card">
-        <div class="summary-label">share</div>
-        <div class="summary-value" id="summaryShare">url state ready</div>
       </article>
     </section>
 
@@ -51,6 +51,10 @@
 
         <div class="field-grid top-grid">
           <label class="field">
+            <span>pilot tag</span>
+            <input id="pilotName" type="text" placeholder="dean">
+          </label>
+          <label class="field">
             <span>rate type</span>
             <select id="rateType">
               <option value="ACTUAL">Actual</option>
@@ -64,6 +68,25 @@
         </div>
 
         <div class="axis-grid" id="axisGrid"></div>
+
+        <section class="throttle-card">
+          <div class="section-head compact-head">
+            <div>
+              <h2>throttle</h2>
+              <p>shared and exported with the setup, but separate from the rate curve graph.</p>
+            </div>
+          </div>
+          <div class="field-grid throttle-grid">
+            <label class="field">
+              <span>throttle mid</span>
+              <input id="throttleMid" type="number" min="0" max="1" step="0.01">
+            </label>
+            <label class="field">
+              <span>throttle expo</span>
+              <input id="throttleExpo" type="number" min="0" max="1" step="0.01">
+            </label>
+          </div>
+        </section>
       </section>
 
       <section class="card">
@@ -94,6 +117,7 @@
           <button id="copyShareButton" class="primary-btn">copy share url</button>
           <button id="resetButton" class="ghost-btn">reset defaults</button>
         </div>
+        <div class="share-label" id="shareLabel">dean's rates</div>
       </section>
 
       <section class="card">
@@ -122,8 +146,8 @@
       </div>
       <div class="note-grid">
         <div class="note-item">This first pass supports <code>Actual</code> and <code>Betaflight</code> only.</div>
-        <div class="note-item">The share URL stores the active rate type and all axis values.</div>
-        <div class="note-item">CLI export uses the standard <code>rateprofile</code> and <code>set ...</code> variables.</div>
+        <div class="note-item">The share URL stores pilot tag, rate type, throttle settings, and all axis values.</div>
+        <div class="note-item">CLI export now includes <code>thr_mid</code> and <code>thr_expo</code> as well.</div>
       </div>
       <div class="status-panel" id="statusStrip">ready.</div>
     </section>

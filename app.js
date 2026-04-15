@@ -10,44 +10,53 @@ const RATE_MODELS = {
     label: "Actual",
     summary: "Actual first pass: center sensitivity, max rate, and expo.",
     fields: [
-      { key: "rcRate", label: "center sensitivity", min: 20, max: 400, step: 1 },
+      { key: "rcRate", label: "center sensitivity", min: 20, max: 400, step: 0.1 },
       { key: "sRate", label: "max rate", min: 50, max: 2000, step: 1 },
-      { key: "expo", label: "expo", min: 0, max: 100, step: 1 },
+      { key: "expo", label: "expo", min: 0, max: 1, step: 0.01 },
     ],
   },
   BETAFLIGHT: {
     label: "Betaflight",
     summary: "Betaflight first pass: rc rate, super rate, and expo.",
     fields: [
-      { key: "rcRate", label: "rc rate", min: 1, max: 255, step: 1 },
+      { key: "rcRate", label: "rc rate", min: 1, max: 255, step: 0.1 },
       { key: "sRate", label: "super rate", min: 0, max: 100, step: 1 },
-      { key: "expo", label: "expo", min: 0, max: 100, step: 1 },
+      { key: "expo", label: "expo", min: 0, max: 1, step: 0.01 },
     ],
   },
 };
 
 const DEFAULT_STATE = {
+  pilotName: "dean",
   rateType: "ACTUAL",
   linkedAxes: true,
   axes: {
-    roll: { rcRate: 70, sRate: 670, expo: 0 },
-    pitch: { rcRate: 70, sRate: 670, expo: 0 },
-    yaw: { rcRate: 60, sRate: 540, expo: 0 },
+    roll: { rcRate: 72.5, sRate: 640, expo: 0.32 },
+    pitch: { rcRate: 72.5, sRate: 640, expo: 0.32 },
+    yaw: { rcRate: 110, sRate: 600, expo: 0.17 },
+  },
+  throttle: {
+    mid: 0.5,
+    expo: 0.1,
   },
 };
 
 const elements = {
+  pilotName: document.getElementById("pilotName"),
   rateType: document.getElementById("rateType"),
   linkedAxes: document.getElementById("linkedAxes"),
   axisGrid: document.getElementById("axisGrid"),
+  throttleMid: document.getElementById("throttleMid"),
+  throttleExpo: document.getElementById("throttleExpo"),
   curveCanvas: document.getElementById("curveCanvas"),
   shareUrl: document.getElementById("shareUrl"),
+  shareLabel: document.getElementById("shareLabel"),
   cliOutput: document.getElementById("cliOutput"),
   graphDescription: document.getElementById("graphDescription"),
   graphStats: document.getElementById("graphStats"),
+  summaryPilot: document.getElementById("summaryPilot"),
   summaryType: document.getElementById("summaryType"),
   summaryRoll: document.getElementById("summaryRoll"),
-  summaryShare: document.getElementById("summaryShare"),
   copyShareButton: document.getElementById("copyShareButton"),
   copyCliButton: document.getElementById("copyCliButton"),
   resetButton: document.getElementById("resetButton"),
@@ -67,9 +76,24 @@ function bindEvents() {
     refreshAll();
   });
 
+  elements.pilotName.addEventListener("input", () => {
+    state.pilotName = sanitizePilotName(elements.pilotName.value);
+    refreshAll();
+  });
+
   elements.linkedAxes.addEventListener("change", () => {
     state.linkedAxes = elements.linkedAxes.checked;
     setStatus(state.linkedAxes ? "roll and pitch are linked." : "roll and pitch are unlinked.");
+  });
+
+  elements.throttleMid.addEventListener("input", () => {
+    state.throttle.mid = clampNumber(Number(elements.throttleMid.value), 0, 1);
+    refreshAll();
+  });
+
+  elements.throttleExpo.addEventListener("input", () => {
+    state.throttle.expo = clampNumber(Number(elements.throttleExpo.value), 0, 1);
+    refreshAll();
   });
 
   elements.copyShareButton.addEventListener("click", async () => {
@@ -90,8 +114,11 @@ function bindEvents() {
 
 function renderAxisInputs() {
   const model = RATE_MODELS[state.rateType];
+  elements.pilotName.value = state.pilotName;
   elements.rateType.value = state.rateType;
   elements.linkedAxes.checked = state.linkedAxes;
+  elements.throttleMid.value = formatDecimal(state.throttle.mid, 2);
+  elements.throttleExpo.value = formatDecimal(state.throttle.expo, 2);
   elements.graphDescription.textContent = model.summary;
   elements.axisGrid.innerHTML = AXES.map((axis) => renderAxisBlock(axis, model)).join("");
 
@@ -251,14 +278,14 @@ function sampleAxis(axis, stick) {
 
 function sampleActual(values, stick) {
   const x = clampNumber(stick, 0, 1);
-  const expo = values.expo / 100;
+  const expo = values.expo;
   const shaped = x * (1 - expo) + Math.pow(x, 3) * expo;
   return x * (values.rcRate + (values.sRate - values.rcRate) * shaped);
 }
 
 function sampleBetaflight(values, stick) {
   const x = clampNumber(stick, 0, 1);
-  const expo = values.expo / 100;
+  const expo = values.expo;
   const rcRate = values.rcRate / 100;
   const superRate = values.sRate / 100;
   const rcCommand = x * (1 - expo) + Math.pow(x, 3) * expo;
@@ -271,41 +298,48 @@ function updateShareUrl() {
   const url = new URL(window.location.href);
   url.search = serializeState(state).toString();
   elements.shareUrl.value = url.toString();
-  elements.summaryShare.textContent = "url state ready";
+  elements.shareLabel.textContent = getShareLabel();
 }
 
 function updateCliOutput() {
   const lines = [
     "rateprofile 0",
+    `# ${getShareLabel()}`,
     `set rates_type = ${state.rateType}`,
   ];
 
   for (const axis of AXES) {
     const values = state.axes[axis];
     lines.push(`set ${axis}_rc_rate = ${Math.round(values.rcRate)}`);
-    lines.push(`set ${axis}_expo = ${Math.round(values.expo)}`);
+    lines.push(`set ${axis}_expo = ${Math.round(values.expo * 100)}`);
     lines.push(`set ${axis}_srate = ${Math.round(values.sRate)}`);
   }
 
+  lines.push(`set thr_mid = ${Math.round(state.throttle.mid * 100)}`);
+  lines.push(`set thr_expo = ${Math.round(state.throttle.expo * 100)}`);
   lines.push("save");
   elements.cliOutput.value = lines.join("\n");
 }
 
 function updateSummary() {
+  elements.summaryPilot.textContent = getShareLabel();
   elements.summaryType.textContent = RATE_MODELS[state.rateType].label;
   elements.summaryRoll.textContent = `${Math.round(sampleAxis("roll", 1))} deg/s`;
 }
 
 function serializeState(current) {
   const params = new URLSearchParams();
+  params.set("pilot", current.pilotName);
   params.set("type", current.rateType);
   params.set("link", current.linkedAxes ? "1" : "0");
+  params.set("thrMid", formatDecimal(current.throttle.mid, 2));
+  params.set("thrEx", formatDecimal(current.throttle.expo, 2));
 
   for (const axis of AXES) {
     const values = current.axes[axis];
-    params.set(`${axis}Rc`, String(values.rcRate));
-    params.set(`${axis}Sr`, String(values.sRate));
-    params.set(`${axis}Ex`, String(values.expo));
+    params.set(`${axis}Rc`, formatDecimal(values.rcRate, 2));
+    params.set(`${axis}Sr`, formatDecimal(values.sRate, 2));
+    params.set(`${axis}Ex`, formatDecimal(values.expo, 2));
   }
 
   return params;
@@ -320,9 +354,14 @@ function loadStateFromUrl() {
     nextState.rateType = requestedType;
   }
 
+  nextState.pilotName = sanitizePilotName(params.get("pilot") || nextState.pilotName);
+
   if (params.has("link")) {
     nextState.linkedAxes = params.get("link") !== "0";
   }
+
+  nextState.throttle.mid = readNumberParam(params, "thrMid", nextState.throttle.mid);
+  nextState.throttle.expo = readNumberParam(params, "thrEx", nextState.throttle.expo);
 
   for (const axis of AXES) {
     nextState.axes[axis].rcRate = readNumberParam(params, `${axis}Rc`, nextState.axes[axis].rcRate);
@@ -336,6 +375,9 @@ function loadStateFromUrl() {
 
 function sanitizeState(current) {
   const fields = RATE_MODELS[current.rateType].fields;
+  current.pilotName = sanitizePilotName(current.pilotName);
+  current.throttle.mid = clampNumber(current.throttle.mid, 0, 1);
+  current.throttle.expo = clampNumber(current.throttle.expo, 0, 1);
   for (const axis of AXES) {
     for (const field of fields) {
       current.axes[axis][field.key] = clampNumber(current.axes[axis][field.key], field.min, field.max);
@@ -356,6 +398,20 @@ function readNumberParam(params, key, fallback) {
 
 function cloneState(source) {
   return JSON.parse(JSON.stringify(source));
+}
+
+function sanitizePilotName(value) {
+  return `${value || ""}`.trim().replace(/\s+/g, " ").slice(0, 40) || "pilot";
+}
+
+function getShareLabel() {
+  const pilot = state.pilotName.endsWith("s") ? `${state.pilotName}' rates` : `${state.pilotName}'s rates`;
+  return pilot;
+}
+
+function formatDecimal(value, digits) {
+  const fixed = Number(value).toFixed(digits);
+  return fixed.replace(/\.?0+$/, "");
 }
 
 function clampNumber(value, min, max) {
