@@ -184,7 +184,7 @@ body::before {
 }
 
 .summary-value {
-  color: var(--accent);
+  color: var(--accent-2);
   font-size: 14px;
   line-height: 1.5;
 }

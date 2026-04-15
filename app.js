@@ -562,11 +562,9 @@ function applyViewMode() {
   elements.shareViewSection.hidden = !isShareView;
 
   if (isShareView) {
-    elements.subtitle.textContent = "shared betaflight rates, ready to read or tweak";
+    elements.subtitle.textContent = "shared setup";
     elements.heroMarkers.innerHTML = `
-      <span class="hero-chip">shared setup</span>
       <span class="hero-chip">${RATE_MODELS[state.rateType].label.toLowerCase()}</span>
-      <span class="hero-chip">graph + cli ready</span>
     `;
   }
 }
