@@ -593,31 +593,39 @@ function serializeState(current) {
 }
 
 function encodeCompactState(current) {
-  const payload = {
-    p: current.pilotName,
-    n: current.setupName,
-    b: current.bfVersion,
-    t: current.rateType,
-    l: current.linkedAxes ? 1 : 0,
-    th: [current.throttle.hover, current.throttle.mid, current.throttle.expo].map((value) => roundStateValue(value)),
-    a: AXES.map((axis) => {
-      const values = current.axes[axis];
-      return [roundStateValue(values.rcRate), roundStateValue(values.sRate), roundStateValue(values.expo)];
-    }),
-  };
+  const throttle = [
+    Math.round(current.throttle.hover * 100),
+    Math.round(current.throttle.mid * 100),
+    Math.round(current.throttle.expo * 100),
+  ];
+  const axes = AXES.map((axis) => {
+    const values = current.axes[axis];
+    return [
+      Math.round(values.rcRate * 10),
+      Math.round(values.sRate),
+      Math.round(values.expo * 100),
+    ];
+  });
 
-  const json = JSON.stringify(payload);
-  const bytes = new TextEncoder().encode(json);
-  let binary = "";
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return [
+    "v1",
+    encodeURIComponent(current.pilotName),
+    encodeURIComponent(current.setupName),
+    encodeURIComponent(current.bfVersion),
+    current.rateType === "ACTUAL" ? "A" : "B",
+    current.linkedAxes ? "1" : "0",
+    encodeCompactNumberGroup(throttle),
+    ...axes.map((values) => encodeCompactNumberGroup(values)),
+  ].join("~");
 }
 
 function decodeCompactState(encoded) {
   if (!encoded) {
     return null;
+  }
+
+  if (encoded.startsWith("v1~")) {
+    return decodeCompactStateV1(encoded);
   }
 
   try {
@@ -630,6 +638,50 @@ function decodeCompactState(encoded) {
   } catch (_error) {
     return null;
   }
+}
+
+function decodeCompactStateV1(encoded) {
+  try {
+    const parts = encoded.split("~");
+    if (parts.length !== 10 || parts[0] !== "v1") {
+      return null;
+    }
+
+    const rateType = parts[4] === "A" ? "ACTUAL" : "BETAFLIGHT";
+    const throttle = decodeCompactNumberGroup(parts[6]);
+    const axes = parts.slice(7).map((group) => decodeCompactNumberGroup(group));
+
+    return {
+      p: decodeURIComponent(parts[1]),
+      n: decodeURIComponent(parts[2]),
+      b: decodeURIComponent(parts[3]),
+      t: rateType,
+      l: parts[5] === "1" ? 1 : 0,
+      th: [
+        (throttle[0] ?? 50) / 100,
+        (throttle[1] ?? 50) / 100,
+        (throttle[2] ?? 25) / 100,
+      ],
+      a: axes.map((values, index) => {
+        const defaults = DEFAULT_STATE.axes[AXES[index]];
+        return [
+          (values[0] ?? Math.round(defaults.rcRate * 10)) / 10,
+          values[1] ?? Math.round(defaults.sRate),
+          (values[2] ?? Math.round(defaults.expo * 100)) / 100,
+        ];
+      }),
+    };
+  } catch (_error) {
+    return null;
+  }
+}
+
+function encodeCompactNumberGroup(values) {
+  return values.map((value) => Math.max(0, value).toString(36)).join(".");
+}
+
+function decodeCompactNumberGroup(group) {
+  return `${group || ""}`.split(".").map((token) => parseInt(token, 36));
 }
 
 function applyCompactState(payload, nextState) {
@@ -797,10 +849,6 @@ function formatDisplayValue(value) {
 
 function formatPercent(value) {
   return `${Math.round(clampNumber(value, 0, 1) * 100)}%`;
-}
-
-function roundStateValue(value) {
-  return Number(formatDecimal(value, 2));
 }
 
 function clampNumber(value, min, max) {
