@@ -74,7 +74,6 @@ body::before {
   text-transform: lowercase;
 }
 
-.hero-tag,
 .toggle-pill {
   display: inline-flex;
   align-items: center;
@@ -88,25 +87,16 @@ body::before {
   text-transform: lowercase;
 }
 
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--accent);
-  box-shadow: 0 0 12px var(--accent);
-}
-
 .summary-grid,
 .main-grid,
 .field-grid,
-.axis-grid,
-.note-grid {
+.axis-grid {
   display: grid;
   gap: 18px;
 }
 
 .summary-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-bottom: 18px;
 }
 
@@ -130,11 +120,6 @@ body::before {
 
 .axis-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.note-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-bottom: 16px;
 }
 
 .summary-card,
@@ -182,8 +167,6 @@ body::before {
 }
 
 .section-head p,
-.status-panel,
-.note-item,
 .graph-stats {
   color: #bbb2ce;
   font-size: 12px;
@@ -335,14 +318,6 @@ textarea:focus {
   border: 1px solid var(--line);
 }
 
-.note-item,
-.status-panel {
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: var(--bg-3);
-}
-
 .share-label {
   margin-top: 12px;
   color: var(--accent-3);
@@ -354,12 +329,27 @@ code {
   color: var(--accent-3);
 }
 
+.footer {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.footer a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: var(--accent);
+}
+
 @media (max-width: 980px) {
   .summary-grid,
   .main-grid,
   .field-grid,
-  .axis-grid,
-  .note-grid {
+  .axis-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -68,7 +68,6 @@ const elements = {
   cliImportInput: document.getElementById("cliImportInput"),
   importCliButton: document.getElementById("importCliButton"),
   clearCliImportButton: document.getElementById("clearCliImportButton"),
-  statusStrip: document.getElementById("statusStrip"),
 };
 
 const state = loadStateFromUrl();
@@ -501,7 +500,7 @@ async function copyText(value, successMessage) {
 }
 
 function setStatus(message) {
-  elements.statusStrip.textContent = message;
+  console.info(`[rates] ${message}`);
 }
 
 function importCliText(text) {

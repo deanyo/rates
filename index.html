@@ -18,11 +18,7 @@
   <div class="shell">
     <header class="hero">
       <h1>rates</h1>
-      <p class="subtitle">betaflight rate setup, graph, share, cli export</p>
-      <div class="hero-tag">
-        <span class="dot"></span>
-        <span>static · github pages friendly · share by url</span>
-      </div>
+      <p class="subtitle">dial in betaflight rates, inspect the curve, and share the exact setup</p>
     </header>
 
     <section class="summary-grid">
@@ -46,12 +42,12 @@
 
     <section class="main-grid">
       <section class="card">
-      <div class="section-head">
-        <div>
-          <h2>setup</h2>
-          <p>Betaflight-first workflow. pick a rate model, link axes if you want, then tune roll, pitch, and yaw.</p>
+        <div class="section-head">
+          <div>
+            <h2>setup</h2>
+            <p>set the pilot and setup details, then tune roll, pitch, yaw, and throttle.</p>
+          </div>
         </div>
-      </div>
 
         <div class="field-grid top-grid">
           <label class="field">
@@ -85,7 +81,7 @@
           <div class="section-head compact-head">
             <div>
               <h2>throttle</h2>
-              <p>shared and exported with the setup, but separate from the rate curve graph. values below are stored in Betaflight-style decimal form.</p>
+              <p>throttle settings are shared and exported with the setup.</p>
             </div>
           </div>
           <div class="field-grid throttle-grid">
@@ -118,7 +114,7 @@
         <div class="section-head">
           <div>
             <h2>share</h2>
-            <p>copy a link that restores the current setup exactly in the browser.</p>
+            <p>copy a link that restores the current setup exactly.</p>
           </div>
         </div>
         <label class="field">
@@ -153,7 +149,7 @@
       <div class="section-head">
         <div>
           <h2>cli import</h2>
-          <p>paste Betaflight CLI here to fill the UI. supports plain <code>set ...</code> lines and useful parts of real <code>diff</code> or <code>dump</code> output.</p>
+          <p>paste Betaflight CLI here to fill the UI from <code>set ...</code>, <code>diff</code>, or <code>dump</code> style output.</p>
         </div>
       </div>
       <label class="field">
@@ -166,20 +162,9 @@
       </div>
     </section>
 
-    <section class="card">
-      <div class="section-head">
-        <div>
-          <h2>notes</h2>
-          <p>Betaflight-first tool for sharing and iteration. good enough to use, but still worth validating against Betaflight’s own calculator before calling it exact.</p>
-        </div>
-      </div>
-      <div class="note-grid">
-        <div class="note-item">This first pass supports <code>Actual</code> and <code>Betaflight</code> only.</div>
-        <div class="note-item">The share URL stores pilot tag, rate type, throttle settings, and all axis values.</div>
-        <div class="note-item">CLI export now includes <code>thr_mid</code> and <code>thr_expo</code>. Oscar Liang’s rates and throttle guides are good companion references.</div>
-      </div>
-      <div class="status-panel" id="statusStrip">ready.</div>
-    </section>
+    <footer class="footer">
+      <a href="https://github.com/deanyo/rates" target="_blank" rel="noreferrer">src</a>
+    </footer>
   </div>
 
   <script type="module" src="./app.js"></script>
