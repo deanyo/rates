@@ -509,7 +509,7 @@ function importCliText(text) {
   let importedAnything = false;
 
   for (const rawLine of lines) {
-    const line = rawLine.trim();
+    const line = sanitizeCliLine(rawLine);
     if (!line || line.startsWith("#") || line.startsWith("//")) {
       continue;
     }
@@ -519,9 +519,9 @@ function importCliText(text) {
       continue;
     }
 
-    const key = match[1];
-    const value = match[2].trim();
-    importedAnything = applyCliValue(key, value) || importedAnything;
+  const key = match[1];
+  const value = match[2].trim();
+  importedAnything = applyCliValue(key, value) || importedAnything;
   }
 
   if (!importedAnything) {
@@ -539,8 +539,9 @@ function applyCliValue(key, rawValue) {
 
   if (normalizedKey === "rates_type") {
     const normalizedValue = rawValue.toUpperCase();
-    if (RATE_MODELS[normalizedValue]) {
-      state.rateType = normalizedValue;
+    const mappedType = mapRatesType(normalizedValue);
+    if (mappedType && RATE_MODELS[mappedType]) {
+      state.rateType = mappedType;
       return true;
     }
     return false;
@@ -593,4 +594,35 @@ function parseCliPercent(rawValue) {
   }
 
   return clampNumber(numeric, 0, 1);
+}
+
+function sanitizeCliLine(line) {
+  return `${line || ""}`
+    .replace(/;.*/, "")
+    .replace(/#.*/, "")
+    .trim();
+}
+
+function mapRatesType(value) {
+  const cleaned = `${value || ""}`.trim().toUpperCase();
+  if (RATE_MODELS[cleaned]) {
+    return cleaned;
+  }
+
+  const numeric = Number(cleaned);
+  if (numeric === 0) {
+    return "BETAFLIGHT";
+  }
+  if (numeric === 4) {
+    return "ACTUAL";
+  }
+
+  if (cleaned.includes("BETAFLIGHT")) {
+    return "BETAFLIGHT";
+  }
+  if (cleaned.includes("ACTUAL")) {
+    return "ACTUAL";
+  }
+
+  return null;
 }

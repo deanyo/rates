@@ -46,12 +46,12 @@
 
     <section class="main-grid">
       <section class="card">
-        <div class="section-head">
-          <div>
-            <h2>setup</h2>
-            <p>pick a rate model, link axes if you want, then tune roll, pitch, and yaw.</p>
-          </div>
+      <div class="section-head">
+        <div>
+          <h2>setup</h2>
+          <p>Betaflight-first workflow. pick a rate model, link axes if you want, then tune roll, pitch, and yaw.</p>
         </div>
+      </div>
 
         <div class="field-grid top-grid">
           <label class="field">
@@ -153,7 +153,7 @@
       <div class="section-head">
         <div>
           <h2>cli import</h2>
-          <p>paste Betaflight CLI rate lines here to fill the UI. comments and unrelated lines are ignored.</p>
+          <p>paste Betaflight CLI here to fill the UI. supports plain <code>set ...</code> lines and useful parts of real <code>diff</code> or <code>dump</code> output.</p>
         </div>
       </div>
       <label class="field">
@@ -170,13 +170,13 @@
       <div class="section-head">
         <div>
           <h2>notes</h2>
-          <p>good enough for sharing and iteration, but still worth validating against Betaflight’s own calculator before calling it exact.</p>
+          <p>Betaflight-first tool for sharing and iteration. good enough to use, but still worth validating against Betaflight’s own calculator before calling it exact.</p>
         </div>
       </div>
       <div class="note-grid">
         <div class="note-item">This first pass supports <code>Actual</code> and <code>Betaflight</code> only.</div>
         <div class="note-item">The share URL stores pilot tag, rate type, throttle settings, and all axis values.</div>
-        <div class="note-item">CLI export now includes <code>thr_mid</code> and <code>thr_expo</code> as well.</div>
+        <div class="note-item">CLI export now includes <code>thr_mid</code> and <code>thr_expo</code>. Oscar Liang’s rates and throttle guides are good companion references.</div>
       </div>
       <div class="status-panel" id="statusStrip">ready.</div>
     </section>

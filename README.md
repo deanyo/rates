@@ -2,6 +2,8 @@
 
 Rates is a static browser tool for exploring and sharing FPV rate setups.
 
+It is intentionally Betaflight-first rather than simulator-first.
+
 This first pass focuses on a practical GitHub Pages workflow:
 
 - set up `Actual` or `Betaflight` rates in the browser
@@ -27,13 +29,27 @@ This first pass focuses on a practical GitHub Pages workflow:
 - CLI export
 - CLI import
 
+## Scope And Assumptions
+
+- the tool is designed around Betaflight terminology and workflow
+- `Actual` and `Betaflight` are the supported rate models for now
+- throttle settings are handled as separate Betaflight-style decimal values
+- shared URLs are meant to preserve Betaflight-oriented setup state, not simulate every possible FPV app format
+
+## References
+
+- Oscar Liang rates guide: https://oscarliang.com/rates/
+- Oscar Liang throttle mid/expo guide: https://oscarliang.com/throttle-mid-expo/
+- Betaflight Profiles and Rate Profiles: https://www.betaflight.com/docs/development/Profiles
+- Betaflight CLI docs: https://www.betaflight.com/docs/development/Cli
+
 ## Important Note
 
 This is an MVP. The UI, share flow, and CLI export are solid enough to build on, but the rate-curve math should still be validated against Betaflight's own calculator and configurator behavior before treating it as an exact reference implementation.
 
 That is especially important if this grows into:
 
-- import from CLI or `diff rates`
+- import from CLI or `diff` / `dump` variants
 - support for `Quick`, `KISS`, and `Raceflight`
 - compatibility claims across Betaflight versions
 
@@ -55,5 +71,6 @@ http://localhost:8000
 
 - validate curve math against Betaflight's official rate calculator
 - add `Quick` rates
+- support more pasted Betaflight config variants
 - add per-profile naming
 - add a compact mobile layout pass
