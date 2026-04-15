@@ -11,7 +11,7 @@ The current version focuses on a practical GitHub Pages workflow:
 - add a setup name and Betaflight version tag to shared state
 - include throttle mid and throttle expo in shared state and CLI export
 - inspect the curve graph live
-- share the exact setup via URL
+- share the exact setup via URL, with a read-only share view and an edit link back to the full tool
 - copy a CLI block for Betaflight
 - import from pasted Betaflight CLI lines
 

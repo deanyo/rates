@@ -45,8 +45,23 @@
       </article>
     </section>
 
+    <section class="card share-focus" id="shareViewSection" hidden>
+      <div class="section-head">
+        <div>
+          <h2>shared setup</h2>
+          <p>Read the values, inspect the curve, or open the editor to make changes.</p>
+        </div>
+      </div>
+      <div class="share-focus-grid" id="shareFocusGrid"></div>
+      <div class="action-row">
+        <a id="editSetupLink" class="primary-btn button-link" href="./">edit this setup</a>
+        <button id="copyShareViewButton" class="ghost-btn">copy share url</button>
+        <button id="copyCliShareButton" class="secondary-btn">copy cli block</button>
+      </div>
+    </section>
+
     <section class="main-grid">
-      <section class="card setup-card">
+      <section class="card setup-card editor-only">
         <div class="section-head">
           <div>
             <h2>setup</h2>
@@ -114,7 +129,7 @@
       </section>
     </section>
 
-    <section class="workflow-grid">
+    <section class="workflow-grid editor-only">
       <section class="card workflow-card share-card">
         <div class="section-head">
           <div>

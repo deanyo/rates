@@ -124,6 +124,10 @@ body::before {
   margin-bottom: 22px;
 }
 
+.share-focus {
+  margin-bottom: 22px;
+}
+
 .workflow-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -331,6 +335,66 @@ textarea:focus {
   white-space: nowrap;
 }
 
+.share-focus-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.share-rate-card {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(44, 39, 61, 0.46);
+}
+
+.share-rate-card h3 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  text-transform: lowercase;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.share-rate-model {
+  font-size: 11px;
+  text-transform: lowercase;
+  color: var(--accent-3);
+  margin-bottom: 14px;
+}
+
+.share-rate-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.share-rate-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(64, 56, 90, 0.72);
+}
+
+.share-rate-row:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.share-rate-row span {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: lowercase;
+}
+
+.share-rate-row strong {
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 600;
+}
+
 #curveCanvas {
   width: 100%;
   height: auto;
@@ -362,6 +426,13 @@ textarea:focus {
   font-family: inherit;
   text-transform: lowercase;
   cursor: pointer;
+}
+
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .primary-btn {
@@ -407,11 +478,28 @@ code {
   color: var(--accent);
 }
 
+body.share-view .editor-only {
+  display: none;
+}
+
+body.share-view .shell {
+  max-width: 980px;
+}
+
+body.share-view .summary-grid {
+  margin-bottom: 18px;
+}
+
+body.share-view .main-grid {
+  grid-template-columns: 1fr;
+}
+
 @media (max-width: 980px) {
   .summary-grid,
   .main-grid,
   .field-grid,
   .axis-grid,
+  .share-focus-grid,
   .workflow-grid {
     grid-template-columns: 1fr;
   }

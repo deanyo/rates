@@ -44,6 +44,8 @@ const DEFAULT_STATE = {
 };
 
 const elements = {
+  subtitle: document.querySelector(".subtitle"),
+  heroMarkers: document.querySelector(".hero-markers"),
   pilotName: document.getElementById("pilotName"),
   setupName: document.getElementById("setupName"),
   bfVersion: document.getElementById("bfVersion"),
@@ -62,6 +64,11 @@ const elements = {
   summaryName: document.getElementById("summaryName"),
   summaryType: document.getElementById("summaryType"),
   summaryRoll: document.getElementById("summaryRoll"),
+  shareViewSection: document.getElementById("shareViewSection"),
+  shareFocusGrid: document.getElementById("shareFocusGrid"),
+  editSetupLink: document.getElementById("editSetupLink"),
+  copyShareViewButton: document.getElementById("copyShareViewButton"),
+  copyCliShareButton: document.getElementById("copyCliShareButton"),
   copyShareButton: document.getElementById("copyShareButton"),
   copyCliButton: document.getElementById("copyCliButton"),
   resetButton: document.getElementById("resetButton"),
@@ -70,8 +77,10 @@ const elements = {
   clearCliImportButton: document.getElementById("clearCliImportButton"),
 };
 
+const isShareView = loadViewFromUrl() === "share";
 const state = loadStateFromUrl();
 
+applyViewMode();
 renderAxisInputs();
 bindEvents();
 refreshAll();
@@ -117,7 +126,15 @@ function bindEvents() {
     await copyText(elements.shareUrl.value, "share url copied.");
   });
 
+  elements.copyShareViewButton.addEventListener("click", async () => {
+    await copyText(buildStateUrl({ shareView: true }).toString(), "share url copied.");
+  });
+
   elements.copyCliButton.addEventListener("click", async () => {
+    await copyText(elements.cliOutput.value, "cli block copied.");
+  });
+
+  elements.copyCliShareButton.addEventListener("click", async () => {
     await copyText(elements.cliOutput.value, "cli block copied.");
   });
 
@@ -210,6 +227,7 @@ function refreshAll() {
   updateShareUrl();
   updateCliOutput();
   updateSummary();
+  updateShareView();
   updateHistory();
 }
 
@@ -359,8 +377,7 @@ function sampleBetaflight(values, stick) {
 }
 
 function updateShareUrl() {
-  const url = new URL(window.location.href);
-  url.search = serializeState(state).toString();
+  const url = buildStateUrl({ shareView: true });
   elements.shareUrl.value = url.toString();
   elements.shareLabel.textContent = getShareLabel();
 }
@@ -393,6 +410,67 @@ function updateSummary() {
   elements.summaryRoll.textContent = `${Math.round(sampleAxis("roll", 1))} deg/s`;
 }
 
+function updateShareView() {
+  if (!isShareView) {
+    return;
+  }
+
+  elements.shareFocusGrid.innerHTML = getShareViewCards().join("");
+  elements.editSetupLink.href = buildStateUrl({ shareView: false }).toString();
+}
+
+function getShareViewCards() {
+  const model = RATE_MODELS[state.rateType];
+  const cards = [];
+
+  if (state.linkedAxes) {
+    cards.push(renderShareAxisCard("roll / pitch", state.axes.roll, model));
+  } else {
+    cards.push(renderShareAxisCard("roll", state.axes.roll, model));
+    cards.push(renderShareAxisCard("pitch", state.axes.pitch, model));
+  }
+
+  cards.push(renderShareAxisCard("yaw", state.axes.yaw, model));
+  cards.push(renderThrottleCard());
+  return cards;
+}
+
+function renderShareAxisCard(label, values, model) {
+  const rows = model.fields.map((field) => `
+    <div class="share-rate-row">
+      <span>${field.label}</span>
+      <strong>${formatDisplayValue(values[field.key])}</strong>
+    </div>
+  `).join("");
+
+  return `
+    <article class="share-rate-card">
+      <h3>${label}</h3>
+      <div class="share-rate-model">${model.label}</div>
+      <div class="share-rate-rows">${rows}</div>
+    </article>
+  `;
+}
+
+function renderThrottleCard() {
+  return `
+    <article class="share-rate-card">
+      <h3>throttle</h3>
+      <div class="share-rate-model">Betaflight</div>
+      <div class="share-rate-rows">
+        <div class="share-rate-row">
+          <span>throttle mid</span>
+          <strong>${formatDisplayValue(state.throttle.mid)}</strong>
+        </div>
+        <div class="share-rate-row">
+          <span>throttle expo</span>
+          <strong>${formatDisplayValue(state.throttle.expo)}</strong>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
 function serializeState(current) {
   const params = new URLSearchParams();
   params.set("pilot", current.pilotName);
@@ -411,6 +489,18 @@ function serializeState(current) {
   }
 
   return params;
+}
+
+function buildStateUrl({ shareView }) {
+  const url = new URL(window.location.href);
+  const params = serializeState(state);
+
+  if (shareView) {
+    params.set("view", "share");
+  }
+
+  url.search = params.toString();
+  return url;
 }
 
 function loadStateFromUrl() {
@@ -458,9 +548,27 @@ function sanitizeState(current) {
 }
 
 function updateHistory() {
-  const nextUrl = new URL(window.location.href);
-  nextUrl.search = serializeState(state).toString();
+  const nextUrl = buildStateUrl({ shareView: isShareView });
   window.history.replaceState({}, "", nextUrl);
+}
+
+function loadViewFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("view") || "edit";
+}
+
+function applyViewMode() {
+  document.body.classList.toggle("share-view", isShareView);
+  elements.shareViewSection.hidden = !isShareView;
+
+  if (isShareView) {
+    elements.subtitle.textContent = "shared betaflight rates, ready to read or tweak";
+    elements.heroMarkers.innerHTML = `
+      <span class="hero-chip">shared setup</span>
+      <span class="hero-chip">${RATE_MODELS[state.rateType].label.toLowerCase()}</span>
+      <span class="hero-chip">graph + cli ready</span>
+    `;
+  }
 }
 
 function readNumberParam(params, key, fallback) {
@@ -500,6 +608,10 @@ function getFullShareLabel() {
 function formatDecimal(value, digits) {
   const fixed = Number(value).toFixed(digits);
   return fixed.replace(/\.?0+$/, "");
+}
+
+function formatDisplayValue(value) {
+  return formatDecimal(value, 2);
 }
 
 function clampNumber(value, min, max) {
