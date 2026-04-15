@@ -218,72 +218,76 @@ function drawGraph() {
   const ctx = canvas.getContext("2d");
   const width = canvas.width;
   const height = canvas.height;
-  const padding = { top: 24, right: 20, bottom: 42, left: 54 };
+  const padding = { top: 18, right: 18, bottom: 28, left: 18 };
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;
-  const maxRate = Math.max(...AXES.flatMap((axis) => [Math.abs(sampleAxis(axis, -1)), Math.abs(sampleAxis(axis, 1))]));
+  const maxRate = Math.ceil(
+    Math.max(...AXES.flatMap((axis) => [Math.abs(sampleAxis(axis, -1)), Math.abs(sampleAxis(axis, 1))])) / 200,
+  ) * 200;
+  const centerX = padding.left + plotWidth / 2;
+  const centerY = padding.top + plotHeight / 2;
+  const stickScale = plotWidth / 2;
+  const rateScale = plotHeight / 2 / maxRate;
 
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = "#0d0b14";
+  ctx.fillStyle = "#0b0a11";
   ctx.fillRect(0, 0, width, height);
 
-  ctx.strokeStyle = "rgba(255,255,255,0.08)";
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
   ctx.lineWidth = 1;
 
-  for (let i = 0; i <= 4; i += 1) {
-    const x = padding.left + (plotWidth * i) / 4;
-    const y = padding.top + (plotHeight * i) / 4;
-
+  for (let i = 1; i <= 4; i += 1) {
+    const x = padding.left + (plotWidth * i) / 5;
     ctx.beginPath();
     ctx.moveTo(x, padding.top);
     ctx.lineTo(x, height - padding.bottom);
     ctx.stroke();
+  }
 
+  for (let i = 1; i <= 2; i += 1) {
+    const topY = centerY - (plotHeight * i) / 6;
+    const bottomY = centerY + (plotHeight * i) / 6;
     ctx.beginPath();
-    ctx.moveTo(padding.left, y);
-    ctx.lineTo(width - padding.right, y);
+    ctx.moveTo(padding.left, topY);
+    ctx.lineTo(width - padding.right, topY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(padding.left, bottomY);
+    ctx.lineTo(width - padding.right, bottomY);
     ctx.stroke();
   }
 
-  ctx.strokeStyle = "rgba(255,255,255,0.16)";
+  ctx.strokeStyle = "rgba(255,255,255,0.22)";
   ctx.beginPath();
-  ctx.moveTo(padding.left, padding.top);
-  ctx.lineTo(padding.left, height - padding.bottom);
-  ctx.lineTo(width - padding.right, height / 2);
+  ctx.moveTo(centerX, padding.top);
+  ctx.lineTo(centerX, height - padding.bottom);
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.moveTo(padding.left, height / 2);
-  ctx.lineTo(width - padding.right, height / 2);
+  ctx.moveTo(padding.left, centerY);
+  ctx.lineTo(width - padding.right, centerY);
   ctx.stroke();
 
   ctx.fillStyle = "#a79eb8";
-  ctx.font = '11px "JetBrains Mono"';
-  ctx.fillText("stick", width - padding.right - 28, height - 14);
-  ctx.save();
-  ctx.translate(14, padding.top + 12);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillText("deg/s", 0, 0);
-  ctx.restore();
-
-  for (let i = 0; i <= 4; i += 1) {
-    const xLabel = `${Math.round(-100 + (200 * i) / 4)}%`;
-    const yValue = Math.round(maxRate - (2 * maxRate * i) / 4);
-    ctx.fillText(xLabel, padding.left + (plotWidth * i) / 4 - 12, height - 18);
-    ctx.fillText(`${yValue}`, 12, padding.top + (plotHeight * i) / 4 + 4);
-  }
+  ctx.font = '10px "JetBrains Mono"';
+  ctx.fillText(`${maxRate}`, padding.left + 4, padding.top + 10);
+  ctx.fillText("0", padding.left + 4, centerY - 6);
+  ctx.fillText(`-${maxRate}`, padding.left + 4, height - padding.bottom - 4);
+  ctx.fillText("-100%", padding.left, height - 8);
+  ctx.fillText("0", centerX - 3, height - 8);
+  ctx.fillText("+100%", width - padding.right - 34, height - 8);
 
   for (const axis of AXES) {
     ctx.beginPath();
     ctx.strokeStyle = AXIS_COLORS[axis];
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2.5;
 
-    for (let i = 0; i <= 200; i += 1) {
-      const stick = -1 + i / 100;
+    for (let rc = -500; rc <= 500; rc += 2) {
+      const stick = rc / 500;
       const rate = sampleAxis(axis, stick);
-      const x = padding.left + ((stick + 1) / 2) * plotWidth;
-      const y = padding.top + plotHeight / 2 - (rate / maxRate) * (plotHeight / 2);
-      if (i === 0) {
+      const x = centerX + stick * stickScale;
+      const y = centerY - rateScale * rate;
+      if (rc === -500) {
         ctx.moveTo(x, y);
       } else {
         ctx.lineTo(x, y);
@@ -297,8 +301,8 @@ function drawGraph() {
     const color = AXIS_COLORS[axis];
     const center = Math.round(Math.abs(sampleAxis(axis, 0.5)));
     const max = Math.round(sampleAxis(axis, 1));
-    return `<span style="color:${color}">${axis}</span> 50% stick ${center} deg/s · max ${max} deg/s`;
-  }).join("<br>");
+    return `<span class="graph-stat"><span style="color:${color}">${axis}</span> 50% stick ${center} deg/s · max ${max} deg/s</span>`;
+  }).join("");
 }
 
 function sampleAxis(axis, stick) {
