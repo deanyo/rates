@@ -61,7 +61,7 @@
         <div class="section-head">
           <div>
             <h2>setup</h2>
-            <p>Set the pilot and setup details, then tune roll, pitch, yaw, and throttle.</p>
+            <p>Set the pilot, version, rates, and throttle values.</p>
           </div>
         </div>
 
@@ -117,32 +117,34 @@
         </section>
       </section>
 
-      <section class="card graph-card">
-        <div class="section-head">
-          <div>
-            <h2>curve</h2>
-            <p id="graphDescription">Center sensitivity, max rate, and expo.</p>
+      <div class="visual-stack">
+        <section class="card graph-card">
+          <div class="section-head">
+            <div>
+              <h2>curve</h2>
+              <p id="graphDescription">Center sensitivity, max rate, and expo.</p>
+            </div>
           </div>
-        </div>
-        <canvas id="curveCanvas" width="800" height="520" aria-label="Rate curve graph"></canvas>
-        <div class="graph-stats" id="graphStats"></div>
-      </section>
-    </section>
+          <canvas id="curveCanvas" width="800" height="520" aria-label="Rate curve graph"></canvas>
+          <div class="graph-stats" id="graphStats"></div>
+        </section>
 
-    <section class="card throttle-panel">
-      <div class="section-head">
-        <div>
-          <h2>throttle curve</h2>
-          <p>Preview Hover Point, Throttle Mid, and Throttle Expo as a Betaflight-style input to output curve.</p>
-        </div>
-      </div>
-      <div class="throttle-preview">
-        <div class="throttle-preview-head">
-          <span>throttle curve preview</span>
-          <span>input → output</span>
-        </div>
-        <canvas id="throttleCanvas" width="800" height="240" aria-label="Throttle curve preview"></canvas>
-        <div class="graph-stats throttle-stats" id="throttleStats"></div>
+        <section class="card throttle-panel">
+          <div class="section-head">
+            <div>
+              <h2>throttle curve</h2>
+              <p>Preview Hover Point, Throttle Mid, and Throttle Expo as a Betaflight-style input to output curve.</p>
+            </div>
+          </div>
+          <div class="throttle-preview">
+            <div class="throttle-preview-head">
+              <span>throttle curve preview</span>
+              <span>input → output</span>
+            </div>
+            <canvas id="throttleCanvas" width="800" height="240" aria-label="Throttle curve preview"></canvas>
+            <div class="graph-stats throttle-stats" id="throttleStats"></div>
+          </div>
+        </section>
       </div>
     </section>
 

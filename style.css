@@ -122,14 +122,16 @@ body::before {
 .main-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-bottom: 22px;
+  align-items: start;
 }
 
 .share-focus {
   margin-bottom: 22px;
 }
 
-.throttle-panel {
-  margin-bottom: 22px;
+.visual-stack {
+  display: grid;
+  gap: 18px;
 }
 
 .workflow-grid {
@@ -264,14 +266,16 @@ textarea:focus {
 
 .setup-card,
 .graph-card,
-.workflow-card {
+.workflow-card,
+.throttle-panel {
   position: relative;
   overflow: hidden;
 }
 
 .setup-card::before,
 .graph-card::before,
-.workflow-card::before {
+.workflow-card::before,
+.throttle-panel::before {
   content: "";
   position: absolute;
   inset: 0;
