@@ -1,15 +1,17 @@
 :root {
-  --bg-0: #121019;
-  --bg-1: #181521;
-  --bg-2: #211d2e;
-  --bg-3: #2c273d;
-  --ink: #f4f2fb;
-  --muted: #a79eb8;
-  --line: #40385a;
-  --accent: #93f1c6;
-  --accent-2: #86c7ff;
-  --accent-3: #ffbf7e;
-  --shadow: rgba(0, 0, 0, 0.34);
+  --bg-0: #14111b;
+  --bg-1: #1a1621;
+  --bg-2: #231f32;
+  --bg-3: #2a2540;
+  --ink: #eee9fc;
+  --muted: #9a90b3;
+  --line: #3f3951;
+  --accent: #b3f4f3;
+  --accent-2: #e192ef;
+  --accent-3: #b1f2a7;
+  --warn: #f0c27b;
+  --danger: #e965a5;
+  --shadow: rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -21,9 +23,9 @@
 body {
   font-family: "JetBrains Mono", "SF Mono", Consolas, monospace;
   background:
-    radial-gradient(1100px 760px at 8% -18%, rgba(134, 199, 255, 0.14), transparent),
-    radial-gradient(760px 540px at 90% -5%, rgba(255, 191, 126, 0.12), transparent),
-    linear-gradient(160deg, var(--bg-0), var(--bg-1) 42%, var(--bg-0));
+    radial-gradient(1000px 600px at 10% -20%, #2b2436, transparent),
+    radial-gradient(700px 500px at 90% -10%, #1c2a35, transparent),
+    linear-gradient(160deg, var(--bg-0), var(--bg-1) 40%, var(--bg-0));
   color: var(--ink);
   min-height: 100vh;
   padding: 24px;
@@ -34,7 +36,7 @@ body::before {
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(transparent 95%, rgba(255, 255, 255, 0.025)),
+    linear-gradient(transparent 95%, rgba(255, 255, 255, 0.03)),
     linear-gradient(90deg, transparent 95%, rgba(255, 255, 255, 0.02));
   background-size: 40px 40px;
   pointer-events: none;
