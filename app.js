@@ -193,7 +193,7 @@ function drawGraph() {
   const padding = { top: 24, right: 20, bottom: 42, left: 54 };
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;
-  const maxRate = Math.max(...AXES.map((axis) => sampleAxis(axis, 1)));
+  const maxRate = Math.max(...AXES.flatMap((axis) => [Math.abs(sampleAxis(axis, -1)), Math.abs(sampleAxis(axis, 1))]));
 
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#0d0b14";
@@ -221,7 +221,12 @@ function drawGraph() {
   ctx.beginPath();
   ctx.moveTo(padding.left, padding.top);
   ctx.lineTo(padding.left, height - padding.bottom);
-  ctx.lineTo(width - padding.right, height - padding.bottom);
+  ctx.lineTo(width - padding.right, height / 2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(padding.left, height / 2);
+  ctx.lineTo(width - padding.right, height / 2);
   ctx.stroke();
 
   ctx.fillStyle = "#a79eb8";
@@ -234,8 +239,8 @@ function drawGraph() {
   ctx.restore();
 
   for (let i = 0; i <= 4; i += 1) {
-    const xLabel = `${Math.round((100 * i) / 4)}%`;
-    const yValue = Math.round((maxRate * (4 - i)) / 4);
+    const xLabel = `${Math.round(-100 + (200 * i) / 4)}%`;
+    const yValue = Math.round(maxRate - (2 * maxRate * i) / 4);
     ctx.fillText(xLabel, padding.left + (plotWidth * i) / 4 - 12, height - 18);
     ctx.fillText(`${yValue}`, 12, padding.top + (plotHeight * i) / 4 + 4);
   }
@@ -245,11 +250,11 @@ function drawGraph() {
     ctx.strokeStyle = AXIS_COLORS[axis];
     ctx.lineWidth = 3;
 
-    for (let i = 0; i <= 100; i += 1) {
-      const stick = i / 100;
+    for (let i = 0; i <= 200; i += 1) {
+      const stick = -1 + i / 100;
       const rate = sampleAxis(axis, stick);
-      const x = padding.left + stick * plotWidth;
-      const y = padding.top + plotHeight - (rate / maxRate) * plotHeight;
+      const x = padding.left + ((stick + 1) / 2) * plotWidth;
+      const y = padding.top + plotHeight / 2 - (rate / maxRate) * (plotHeight / 2);
       if (i === 0) {
         ctx.moveTo(x, y);
       } else {
@@ -262,9 +267,9 @@ function drawGraph() {
 
   elements.graphStats.innerHTML = AXES.map((axis) => {
     const color = AXIS_COLORS[axis];
-    const center = Math.round(sampleAxis(axis, 0.5));
+    const center = Math.round(Math.abs(sampleAxis(axis, 0.5)));
     const max = Math.round(sampleAxis(axis, 1));
-    return `<span style="color:${color}">${axis}</span> center ${center} deg/s · max ${max} deg/s`;
+    return `<span style="color:${color}">${axis}</span> 50% stick ${center} deg/s · max ${max} deg/s`;
   }).join("<br>");
 }
 
@@ -277,20 +282,32 @@ function sampleAxis(axis, stick) {
 }
 
 function sampleActual(values, stick) {
-  const x = clampNumber(stick, 0, 1);
+  const x = clampNumber(stick, -1, 1);
+  const xAbs = Math.abs(x);
   const expo = values.expo;
-  const shaped = x * (1 - expo) + Math.pow(x, 3) * expo;
-  return x * (values.rcRate + (values.sRate - values.rcRate) * shaped);
+  const expof = xAbs * (Math.pow(x, 5) * expo + x * (1 - expo));
+  const maxAdjustment = Math.max(0, values.sRate - values.rcRate);
+  return x * values.rcRate + maxAdjustment * expof;
 }
 
 function sampleBetaflight(values, stick) {
-  const x = clampNumber(stick, 0, 1);
+  const x = clampNumber(stick, -1, 1);
+  const xAbs = Math.abs(x);
   const expo = values.expo;
-  const rcRate = values.rcRate / 100;
+  let rcRate = values.rcRate / 100;
   const superRate = values.sRate / 100;
-  const rcCommand = x * (1 - expo) + Math.pow(x, 3) * expo;
+
+  if (rcRate > 2) {
+    rcRate = rcRate + (rcRate - 2) * 14.54;
+  }
+
+  let rcCommand = x;
+  if (expo > 0) {
+    rcCommand = x * Math.pow(xAbs, 3) * expo + x * (1 - expo);
+  }
+
   const base = 200 * rcRate * rcCommand;
-  const superFactor = 1 / Math.max(0.01, 1 - x * superRate);
+  const superFactor = 1 / Math.max(0.01, 1 - xAbs * superRate);
   return base * superFactor;
 }
 
