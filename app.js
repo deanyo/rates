@@ -545,7 +545,6 @@ function renderShareAxisCard(label, values, model) {
   return `
     <article class="share-rate-card">
       <h3>${label}</h3>
-      <div class="share-rate-model">${model.label}</div>
       <div class="share-rate-rows">${rows}</div>
     </article>
   `;
@@ -555,7 +554,6 @@ function renderThrottleCard() {
   return `
     <article class="share-rate-card">
       <h3>throttle</h3>
-      <div class="share-rate-model">Betaflight</div>
       <div class="share-rate-rows">
         <div class="share-rate-row">
           <span>hover point</span>
