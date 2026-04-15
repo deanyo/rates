@@ -34,6 +34,7 @@ The current version focuses on a practical GitHub Pages workflow:
 - the tool is designed around Betaflight terminology and workflow
 - `Actual` and `Betaflight` are the supported rate models for now
 - throttle settings are handled as separate Betaflight-style decimal values
+- the default Betaflight version uses the current calendar-based scheme, e.g. `2025.12.1`
 - shared URLs are meant to preserve Betaflight-oriented setup state, not simulate every possible FPV app format
 
 ## References

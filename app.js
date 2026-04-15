@@ -29,7 +29,7 @@ const RATE_MODELS = {
 const DEFAULT_STATE = {
   pilotName: "dean",
   setupName: "indoor daily",
-  bfVersion: "4.5",
+  bfVersion: "2025.12.1",
   rateType: "ACTUAL",
   linkedAxes: true,
   axes: {
@@ -588,7 +588,7 @@ function sanitizeSetupName(value) {
 }
 
 function sanitizeVersion(value) {
-  return `${value || ""}`.trim().replace(/[^0-9.]/g, "").slice(0, 12) || "4.5";
+  return `${value || ""}`.trim().replace(/[^0-9.]/g, "").slice(0, 12) || "2025.12.1";
 }
 
 function getShareLabel() {
