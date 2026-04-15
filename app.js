@@ -40,7 +40,7 @@ const DEFAULT_STATE = {
   throttle: {
     hover: 0.5,
     mid: 0.5,
-    expo: 0.01,
+    expo: 0.25,
   },
 };
 
