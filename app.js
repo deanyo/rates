@@ -1,4 +1,8 @@
 const AXES = ["roll", "pitch", "yaw"];
+const SHORTLINK_API_BASE = document
+  .querySelector('meta[name="rates-shortlink-api"]')
+  ?.getAttribute("content")
+  ?.trim();
 const AXIS_COLORS = {
   roll: "#93f1c6",
   pitch: "#86c7ff",
@@ -71,8 +75,10 @@ const elements = {
   shareViewSection: document.getElementById("shareViewSection"),
   shareFocusGrid: document.getElementById("shareFocusGrid"),
   editSetupLink: document.getElementById("editSetupLink"),
+  createShortLinkShareButton: document.getElementById("createShortLinkShareButton"),
   copyShareViewButton: document.getElementById("copyShareViewButton"),
   copyCliShareButton: document.getElementById("copyCliShareButton"),
+  createShortLinkButton: document.getElementById("createShortLinkButton"),
   copyShareButton: document.getElementById("copyShareButton"),
   copyCliButton: document.getElementById("copyCliButton"),
   resetButton: document.getElementById("resetButton"),
@@ -134,6 +140,14 @@ function bindEvents() {
 
   elements.copyShareButton.addEventListener("click", async () => {
     await copyText(elements.shareUrl.value, "share url copied.");
+  });
+
+  elements.createShortLinkButton.addEventListener("click", async () => {
+    await createShortLink();
+  });
+
+  elements.createShortLinkShareButton.addEventListener("click", async () => {
+    await createShortLink();
   });
 
   elements.copyShareViewButton.addEventListener("click", async () => {
@@ -869,6 +883,39 @@ async function copyText(value, successMessage) {
 
 function setStatus(message) {
   console.info(`[rates] ${message}`);
+}
+
+async function createShortLink() {
+  if (!SHORTLINK_API_BASE) {
+    setStatus("short link api is not configured yet.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${SHORTLINK_API_BASE.replace(/\/$/, "")}/api/shorten`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        state: encodeCompactState(state),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`shorten failed: ${response.status}`);
+    }
+
+    const payload = await response.json();
+    if (!payload?.shortUrl) {
+      throw new Error("missing short url");
+    }
+
+    elements.shareUrl.value = payload.shortUrl;
+    await copyText(payload.shortUrl, "short link copied.");
+  } catch (_error) {
+    setStatus("failed to create short link.");
+  }
 }
 
 function importCliText(text) {

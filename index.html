@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Static browser tool for Betaflight and Actual rates, with live graphs, shareable URLs, and CLI export.">
+  <meta name="rates-shortlink-api" content="">
   <meta property="og:title" content="rates">
   <meta property="og:description" content="Dial in Betaflight and Actual rates in the browser, inspect the curve, and share the exact setup by URL.">
   <meta property="og:type" content="website">
@@ -39,8 +40,9 @@
       <div class="share-focus-grid" id="shareFocusGrid"></div>
       <div class="action-row">
         <a id="editSetupLink" class="primary-btn button-link" href="./">edit this setup</a>
+        <button id="createShortLinkShareButton" class="secondary-btn">create short link</button>
         <button id="copyShareViewButton" class="ghost-btn">copy share url</button>
-        <button id="copyCliShareButton" class="secondary-btn">copy cli block</button>
+        <button id="copyCliShareButton" class="ghost-btn">copy cli block</button>
       </div>
     </section>
 
@@ -145,6 +147,7 @@
           <textarea id="shareUrl" rows="4" readonly></textarea>
         </label>
         <div class="action-row">
+          <button id="createShortLinkButton" class="secondary-btn">create short link</button>
           <button id="copyShareButton" class="primary-btn">copy share url</button>
           <button id="resetButton" class="ghost-btn">reset defaults</button>
         </div>

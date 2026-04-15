@@ -70,6 +70,24 @@ Then open:
 http://localhost:8000
 ```
 
+## Shortlinks
+
+The repo includes a Cloudflare Worker under `worker/` for real short share links backed by Workers KV.
+
+High-level setup:
+
+1. `cd worker`
+2. `wrangler login`
+3. `wrangler kv namespace create SHORTLINKS`
+4. copy the returned namespace ID into `worker/wrangler.toml`
+5. `wrangler deploy`
+6. copy the deployed Worker base URL into the `rates-shortlink-api` meta tag in `index.html`
+
+The Worker exposes:
+
+- `POST /api/shorten` to create a short link from the compact `s=` state payload
+- `GET /r/:id` to redirect to the full `rates` share view
+
 ## Next Good Steps
 
 - validate curve math against Betaflight's official rate calculator

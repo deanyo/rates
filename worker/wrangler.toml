@@ -1,0 +1,13 @@
+name = "rates-shortlinks"
+main = "src/index.js"
+compatibility_date = "2026-04-15"
+
+[vars]
+APP_BASE_URL = "https://dnyo.co.uk/rates/"
+ALLOWED_ORIGINS = "https://dnyo.co.uk"
+# Optional: set this to your routed shortlink domain later, e.g. https://r.dnyo.co.uk
+PUBLIC_BASE_URL = ""
+
+[[kv_namespaces]]
+binding = "SHORTLINKS"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
