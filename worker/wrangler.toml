@@ -10,4 +10,4 @@ PUBLIC_BASE_URL = ""
 
 [[kv_namespaces]]
 binding = "SHORTLINKS"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "5b999e0fbf8d44d8bed23dd5f1276027"
