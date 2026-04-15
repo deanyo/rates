@@ -592,9 +592,86 @@ function serializeState(current) {
   return params;
 }
 
+function encodeCompactState(current) {
+  const payload = {
+    p: current.pilotName,
+    n: current.setupName,
+    b: current.bfVersion,
+    t: current.rateType,
+    l: current.linkedAxes ? 1 : 0,
+    th: [current.throttle.hover, current.throttle.mid, current.throttle.expo].map((value) => roundStateValue(value)),
+    a: AXES.map((axis) => {
+      const values = current.axes[axis];
+      return [roundStateValue(values.rcRate), roundStateValue(values.sRate), roundStateValue(values.expo)];
+    }),
+  };
+
+  const json = JSON.stringify(payload);
+  const bytes = new TextEncoder().encode(json);
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function decodeCompactState(encoded) {
+  if (!encoded) {
+    return null;
+  }
+
+  try {
+    const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized + "=".repeat((4 - (normalized.length % 4 || 4)) % 4);
+    const binary = atob(padded);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    const payload = JSON.parse(new TextDecoder().decode(bytes));
+    return payload;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function applyCompactState(payload, nextState) {
+  if (!payload || typeof payload !== "object") {
+    return false;
+  }
+
+  if (payload.t && RATE_MODELS[payload.t]) {
+    nextState.rateType = payload.t;
+  }
+
+  nextState.pilotName = sanitizePilotName(payload.p || nextState.pilotName);
+  nextState.setupName = sanitizeSetupName(payload.n || nextState.setupName);
+  nextState.bfVersion = sanitizeVersion(payload.b || nextState.bfVersion);
+  nextState.linkedAxes = payload.l !== 0;
+
+  if (Array.isArray(payload.th)) {
+    nextState.throttle.hover = Number.isFinite(payload.th[0]) ? payload.th[0] : nextState.throttle.hover;
+    nextState.throttle.mid = Number.isFinite(payload.th[1]) ? payload.th[1] : nextState.throttle.mid;
+    nextState.throttle.expo = Number.isFinite(payload.th[2]) ? payload.th[2] : nextState.throttle.expo;
+  }
+
+  if (Array.isArray(payload.a)) {
+    AXES.forEach((axis, index) => {
+      const values = payload.a[index];
+      if (!Array.isArray(values)) {
+        return;
+      }
+      nextState.axes[axis].rcRate = Number.isFinite(values[0]) ? values[0] : nextState.axes[axis].rcRate;
+      nextState.axes[axis].sRate = Number.isFinite(values[1]) ? values[1] : nextState.axes[axis].sRate;
+      nextState.axes[axis].expo = Number.isFinite(values[2]) ? values[2] : nextState.axes[axis].expo;
+    });
+  }
+
+  sanitizeState(nextState);
+  return true;
+}
+
 function buildStateUrl({ shareView }) {
   const url = new URL(window.location.href);
-  const params = serializeState(state);
+  const params = new URLSearchParams();
+  params.set("s", encodeCompactState(state));
 
   if (shareView) {
     params.set("view", "share");
@@ -607,6 +684,12 @@ function buildStateUrl({ shareView }) {
 function loadStateFromUrl() {
   const nextState = cloneState(DEFAULT_STATE);
   const params = new URLSearchParams(window.location.search);
+  const compactState = decodeCompactState(params.get("s"));
+
+  if (applyCompactState(compactState, nextState)) {
+    return nextState;
+  }
+
   const requestedType = params.get("type");
 
   if (requestedType && RATE_MODELS[requestedType]) {
@@ -714,6 +797,10 @@ function formatDisplayValue(value) {
 
 function formatPercent(value) {
   return `${Math.round(clampNumber(value, 0, 1) * 100)}%`;
+}
+
+function roundStateValue(value) {
+  return Number(formatDecimal(value, 2));
 }
 
 function clampNumber(value, min, max) {
