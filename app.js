@@ -446,6 +446,10 @@ function updateHistory() {
 }
 
 function readNumberParam(params, key, fallback) {
+  if (!params.has(key)) {
+    return fallback;
+  }
+
   const value = Number(params.get(key));
   return Number.isFinite(value) ? value : fallback;
 }
