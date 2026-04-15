@@ -4,7 +4,7 @@ Rates is a static browser tool for exploring and sharing FPV rate setups.
 
 It is intentionally Betaflight-first rather than simulator-first.
 
-This first pass focuses on a practical GitHub Pages workflow:
+The current version focuses on a practical GitHub Pages workflow:
 
 - set up `Actual` or `Betaflight` rates in the browser
 - add a pilot tag so shared links feel like named setups

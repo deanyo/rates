@@ -8,7 +8,7 @@ const AXIS_COLORS = {
 const RATE_MODELS = {
   ACTUAL: {
     label: "Actual",
-    summary: "Actual first pass: center sensitivity, max rate, and expo.",
+    summary: "Center sensitivity, max rate, and expo.",
     fields: [
       { key: "rcRate", label: "center sensitivity", min: 20, max: 400, step: 0.1 },
       { key: "sRate", label: "max rate", min: 50, max: 2000, step: 1 },
@@ -17,7 +17,7 @@ const RATE_MODELS = {
   },
   BETAFLIGHT: {
     label: "Betaflight",
-    summary: "Betaflight first pass: rc rate, super rate, and expo.",
+    summary: "RC rate, super rate, and expo.",
     fields: [
       { key: "rcRate", label: "rc rate", min: 1, max: 255, step: 0.1 },
       { key: "sRate", label: "super rate", min: 0, max: 100, step: 1 },
