@@ -39,7 +39,7 @@ const DEFAULT_STATE = {
   },
   throttle: {
     mid: 0.5,
-    expo: 0.1,
+    expo: 0.01,
   },
 };
 
