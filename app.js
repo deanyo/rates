@@ -32,28 +32,29 @@ const RATE_MODELS = {
 };
 
 const DEFAULT_STATE = {
-  pilotName: "dean",
+  pilotName: "dyofpv",
   modelName: "air75",
-  setupName: "indoor daily",
+  setupName: "indoor small house",
   bfVersion: "2025.12.1",
   rateType: "ACTUAL",
   linkedAxes: true,
   axes: {
-    roll: { rcRate: 72.5, sRate: 640, expo: 0.32 },
-    pitch: { rcRate: 72.5, sRate: 640, expo: 0.32 },
+    roll: { rcRate: 73, sRate: 640, expo: 0.32 },
+    pitch: { rcRate: 73, sRate: 640, expo: 0.32 },
     yaw: { rcRate: 110, sRate: 600, expo: 0.17 },
   },
   throttle: {
     hover: 0.5,
     mid: 0.5,
-    expo: 0.25,
-    limitType: "OFF",
-    limitPercent: 100,
+    expo: 0.15,
+    limitType: "SCALE",
+    limitPercent: 8,
   },
 };
 
 const elements = {
   subtitle: document.querySelector(".subtitle"),
+  pageTitle: document.getElementById("pageTitle"),
   heroMarkers: document.querySelector(".hero-markers"),
   pilotName: document.getElementById("pilotName"),
   modelName: document.getElementById("modelName"),
@@ -76,6 +77,7 @@ const elements = {
   cliOutput: document.getElementById("cliOutput"),
   graphDescription: document.getElementById("graphDescription"),
   graphStats: document.getElementById("graphStats"),
+  summaryPilotItem: document.getElementById("summaryPilotItem"),
   summaryPilot: document.getElementById("summaryPilot"),
   summaryModel: document.getElementById("summaryModel"),
   summaryName: document.getElementById("summaryName"),
@@ -276,6 +278,7 @@ function setAxisValue(axis, key, value) {
 
 function refreshAll() {
   sanitizeState(state);
+  updatePageTitle();
   drawGraph();
   drawThrottleGraph();
   updateShareUrl();
@@ -985,6 +988,12 @@ function applyViewMode() {
   elements.heroMarkers.hidden = true;
   elements.subtitle.textContent = "";
   elements.heroMarkers.innerHTML = "";
+}
+
+function updatePageTitle() {
+  elements.pageTitle.textContent = isShareView ? getShareLabel() : "my rates";
+  elements.summaryPilotItem.hidden = isShareView;
+  document.title = isShareView ? getShareLabel() : "my rates";
 }
 
 function readNumberParam(params, key, fallback) {
