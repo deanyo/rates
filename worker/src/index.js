@@ -33,8 +33,30 @@ const RESERVED_IDS = new Set([
   "admin",
   "static",
 ]);
+const SHORTEN_LIMITS = [
+  { suffix: "m", windowSeconds: 60, max: 10 },
+  { suffix: "h", windowSeconds: 3600, max: 100 },
+];
 
 async function handleShorten(request, env) {
+  if (!isAllowedOrigin(request, env)) {
+    return jsonResponse({ error: "forbidden_origin" }, 403, request, env);
+  }
+
+  const rateLimit = await enforceShortenRateLimit(request, env);
+  if (rateLimit) {
+    return jsonResponse(
+      {
+        error: "rate_limited",
+        retryAfter: rateLimit.retryAfter,
+      },
+      429,
+      request,
+      env,
+      { "retry-after": String(rateLimit.retryAfter) },
+    );
+  }
+
   const body = await readJson(request);
   const state = `${body?.state || ""}`.trim();
   const alias = sanitizeAlias(body?.alias);
@@ -75,6 +97,31 @@ async function handleShorten(request, env) {
     request,
     env,
   );
+}
+
+async function enforceShortenRateLimit(request, env) {
+  const clientId = getClientIdentifier(request);
+  const nowBucket = Math.floor(Date.now() / 1000);
+
+  for (const limit of SHORTEN_LIMITS) {
+    const bucket = Math.floor(nowBucket / limit.windowSeconds);
+    const key = `_rl:${limit.suffix}:${clientId}:${bucket}`;
+    const currentValue = Number.parseInt((await env.SHORTLINKS.get(key)) || "0", 10);
+    const nextValue = Number.isFinite(currentValue) ? currentValue + 1 : 1;
+
+    await env.SHORTLINKS.put(key, String(nextValue), {
+      expirationTtl: limit.windowSeconds + 60,
+    });
+
+    if (nextValue > limit.max) {
+      const elapsedInWindow = nowBucket % limit.windowSeconds;
+      return {
+        retryAfter: Math.max(1, limit.windowSeconds - elapsedInWindow),
+      };
+    }
+  }
+
+  return null;
 }
 
 async function handleResolve(url, env) {
@@ -148,6 +195,22 @@ function sanitizeAlias(value) {
   return `${value || ""}`.trim().toLowerCase();
 }
 
+function getClientIdentifier(request) {
+  const cfIp = `${request.headers.get("cf-connecting-ip") || ""}`.trim();
+  if (cfIp) {
+    return cfIp;
+  }
+
+  const forwardedFor = `${request.headers.get("x-forwarded-for") || ""}`
+    .split(",")[0]
+    .trim();
+  if (forwardedFor) {
+    return forwardedFor;
+  }
+
+  return "unknown";
+}
+
 function isValidAlias(alias) {
   return /^[a-z0-9-]{3,32}$/.test(alias) && !RESERVED_IDS.has(alias);
 }
@@ -164,12 +227,13 @@ async function readJson(request) {
   }
 }
 
-function jsonResponse(payload, status, request, env) {
+function jsonResponse(payload, status, request, env, extraHeaders = {}) {
   return new Response(JSON.stringify(payload), {
     status,
     headers: {
       "content-type": "application/json; charset=utf-8",
       ...buildCorsHeaders(request, env),
+      ...extraHeaders,
     },
   });
 }
@@ -187,4 +251,18 @@ function buildCorsHeaders(request, env) {
     "access-control-allow-methods": "GET,POST,OPTIONS",
     "access-control-allow-headers": "content-type",
   };
+}
+
+function isAllowedOrigin(request, env) {
+  const requestOrigin = `${request.headers.get("origin") || ""}`.trim();
+  if (!requestOrigin) {
+    return false;
+  }
+
+  const allowedOrigins = `${env.ALLOWED_ORIGINS || ""}`
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return allowedOrigins.includes(requestOrigin);
 }
