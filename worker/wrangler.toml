@@ -3,8 +3,8 @@ main = "src/index.js"
 compatibility_date = "2026-04-15"
 
 [vars]
-APP_BASE_URL = "https://dnyo.co.uk/rates/"
-ALLOWED_ORIGINS = "https://dnyo.co.uk"
+APP_BASE_URL = "https://rates.fpvtools.co.uk/"
+ALLOWED_ORIGINS = "https://dnyo.co.uk,https://rates.fpvtools.co.uk"
 # Optional: set this to your routed shortlink domain later, e.g. https://r.dnyo.co.uk
 PUBLIC_BASE_URL = ""
 

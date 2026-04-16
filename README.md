@@ -83,6 +83,10 @@ High-level setup:
 5. `wrangler deploy`
 6. copy the deployed Worker base URL into the `rates-shortlink-api` meta tag in `index.html`
 
+Current public app domain:
+
+- `https://rates.fpvtools.co.uk`
+
 The Worker exposes:
 
 - `POST /api/shorten` to create a short link from the compact `s=` state payload
