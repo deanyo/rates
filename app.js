@@ -15,8 +15,8 @@ const RATE_MODELS = {
     label: "Actual",
     summary: "Center sensitivity, max rate, and expo.",
     fields: [
-      { key: "rcRate", label: "center sensitivity", min: 20, max: 400, step: 0.1 },
-      { key: "sRate", label: "max rate", min: 50, max: 2000, step: 1 },
+      { key: "rcRate", label: "center sensitivity", min: 20, max: 400, step: 1, integer: true },
+      { key: "sRate", label: "max rate", min: 50, max: 2000, step: 1, integer: true },
       { key: "expo", label: "expo", min: 0, max: 1, step: 0.01 },
     ],
   },
@@ -24,8 +24,8 @@ const RATE_MODELS = {
     label: "Betaflight",
     summary: "RC rate, super rate, and expo.",
     fields: [
-      { key: "rcRate", label: "rc rate", min: 1, max: 255, step: 0.1 },
-      { key: "sRate", label: "super rate", min: 0, max: 100, step: 1 },
+      { key: "rcRate", label: "rc rate", min: 1, max: 255, step: 1, integer: true },
+      { key: "sRate", label: "super rate", min: 0, max: 100, step: 1, integer: true },
       { key: "expo", label: "expo", min: 0, max: 1, step: 0.01 },
     ],
   },
@@ -227,7 +227,7 @@ function renderAxisInputs() {
       const axis = input.dataset.axis;
       const key = input.dataset.key;
       const field = model.fields.find((candidate) => candidate.key === key);
-      const nextValue = clampNumber(Number(input.value), field.min, field.max);
+      const nextValue = sanitizeAxisFieldValue(field, Number(input.value));
       setAxisValue(axis, key, nextValue);
       refreshAll();
     });
@@ -692,8 +692,8 @@ function serializeState(current) {
 
   for (const axis of AXES) {
     const values = current.axes[axis];
-    params.set(`${axis}Rc`, formatDecimal(values.rcRate, 2));
-    params.set(`${axis}Sr`, formatDecimal(values.sRate, 2));
+    params.set(`${axis}Rc`, formatDecimal(values.rcRate, 0));
+    params.set(`${axis}Sr`, formatDecimal(values.sRate, 0));
     params.set(`${axis}Ex`, formatDecimal(values.expo, 2));
   }
 
@@ -954,7 +954,7 @@ function sanitizeState(current) {
   current.throttle.limitPercent = clampNumber(current.throttle.limitPercent, 1, 100);
   for (const axis of AXES) {
     for (const field of fields) {
-      current.axes[axis][field.key] = clampNumber(current.axes[axis][field.key], field.min, field.max);
+      current.axes[axis][field.key] = sanitizeAxisFieldValue(field, current.axes[axis][field.key]);
     }
   }
 }
@@ -1003,6 +1003,14 @@ function readNumberParam(params, key, fallback) {
 
   const value = Number(params.get(key));
   return Number.isFinite(value) ? value : fallback;
+}
+
+function sanitizeAxisFieldValue(field, value) {
+  const clamped = clampNumber(value, field.min, field.max);
+  if (field.integer) {
+    return Math.round(clamped);
+  }
+  return clamped;
 }
 
 function cloneState(source) {
