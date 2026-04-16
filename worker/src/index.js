@@ -39,7 +39,7 @@ async function handleShorten(request, env) {
   const state = `${body?.state || ""}`.trim();
   const alias = sanitizeAlias(body?.alias);
 
-  if (!/^v1~[A-Za-z0-9\-_.~%]+$/.test(state)) {
+  if (!/^v(?:1|2)~[A-Za-z0-9\-_.~%]+$/.test(state)) {
     return jsonResponse({ error: "invalid_state" }, 400, request, env);
   }
 

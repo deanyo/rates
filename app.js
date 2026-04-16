@@ -888,8 +888,7 @@ function applyCompactState(payload, nextState) {
 
 function buildStateUrl({ shareView }) {
   const url = new URL(window.location.href);
-  const params = new URLSearchParams();
-  params.set("s", encodeCompactState(state));
+  const params = serializeState(state);
 
   if (shareView) {
     params.set("view", "share");
