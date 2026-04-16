@@ -13,7 +13,7 @@ export default {
       return handleShorten(request, env);
     }
 
-    if (request.method === "GET" && url.pathname.startsWith("/r/")) {
+    if (request.method === "GET" && isShortlinkPath(url.pathname)) {
       return handleResolve(url, env);
     }
 
@@ -46,7 +46,7 @@ async function handleShorten(request, env) {
   return jsonResponse(
     {
       id,
-      shortUrl: `${publicBase}/r/${id}`,
+      shortUrl: `${publicBase}/${id}`,
     },
     200,
     request,
@@ -55,7 +55,7 @@ async function handleShorten(request, env) {
 }
 
 async function handleResolve(url, env) {
-  const id = url.pathname.split("/").pop();
+  const id = extractShortlinkId(url.pathname);
   if (!/^[a-z0-9]{6,8}$/i.test(id || "")) {
     return new Response("Not found", { status: 404 });
   }
@@ -71,6 +71,29 @@ async function handleResolve(url, env) {
   target.searchParams.set("s", payload.state);
   target.searchParams.set("view", "share");
   return Response.redirect(target.toString(), 302);
+}
+
+function isShortlinkPath(pathname) {
+  if (!pathname || pathname === "/") {
+    return false;
+  }
+
+  if (pathname.startsWith("/api/") || pathname === "/health") {
+    return false;
+  }
+
+  const id = extractShortlinkId(pathname);
+  return /^[a-z0-9]{6,8}$/i.test(id || "");
+}
+
+function extractShortlinkId(pathname) {
+  const trimmed = `${pathname || ""}`.replace(/^\/+|\/+$/g, "");
+  if (!trimmed) {
+    return "";
+  }
+
+  const parts = trimmed.split("/");
+  return parts[parts.length - 1];
 }
 
 async function allocateShortId(env) {
