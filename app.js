@@ -88,6 +88,7 @@ const elements = {
   clearCliImportButton: document.getElementById("clearCliImportButton"),
 };
 
+const hasInitialStateInUrl = hasShareableStateInUrl();
 const isShareView = loadViewFromUrl() === "share";
 const state = loadStateFromUrl();
 
@@ -801,6 +802,13 @@ function sanitizeState(current) {
 }
 
 function updateHistory() {
+  if (!hasInitialStateInUrl && !isShareView && isDefaultState(state)) {
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.search = "";
+    window.history.replaceState({}, "", cleanUrl);
+    return;
+  }
+
   const nextUrl = buildStateUrl({ shareView: isShareView });
   window.history.replaceState({}, "", nextUrl);
 }
@@ -808,6 +816,11 @@ function updateHistory() {
 function loadViewFromUrl() {
   const params = new URLSearchParams(window.location.search);
   return params.get("view") || "edit";
+}
+
+function hasShareableStateInUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.has("s") || params.has("type") || params.has("pilot") || params.has("name");
 }
 
 function applyViewMode() {
@@ -871,6 +884,10 @@ function clampNumber(value, min, max) {
     return min;
   }
   return Math.min(max, Math.max(min, value));
+}
+
+function isDefaultState(current) {
+  return JSON.stringify(current) === JSON.stringify(DEFAULT_STATE);
 }
 
 async function copyText(value, successMessage) {
