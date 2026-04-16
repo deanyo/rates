@@ -25,6 +25,7 @@
 
     <section class="summary-strip">
       <span class="summary-item"><span class="summary-label">pilot</span> <span class="summary-value" id="summaryPilot">dean's rates</span></span>
+      <span class="summary-item"><span class="summary-label">model</span> <span class="summary-value" id="summaryModel">air75</span></span>
       <span class="summary-item"><span class="summary-label">setup</span> <span class="summary-value" id="summaryName">indoor daily</span></span>
       <span class="summary-item"><span class="summary-label">rate type</span> <span class="summary-value" id="summaryType">Actual</span></span>
       <span class="summary-item"><span class="summary-label">roll max</span> <span class="summary-value" id="summaryRoll">670 deg/s</span></span>
@@ -61,6 +62,10 @@
             <input id="pilotName" type="text" placeholder="dean">
           </label>
           <label class="field">
+            <span>model name</span>
+            <input id="modelName" type="text" placeholder="air75">
+          </label>
+          <label class="field">
             <span>setup name</span>
             <input id="setupName" type="text" placeholder="indoor daily">
           </label>
@@ -87,7 +92,7 @@
           <div class="section-head compact-head">
             <div>
               <h2>throttle</h2>
-              <p>Throttle settings are shared and exported with the setup.</p>
+              <p>Throttle settings are shared and exported with the setup, including Betaflight throttle limit.</p>
             </div>
           </div>
           <div class="field-grid throttle-grid">
@@ -102,6 +107,18 @@
             <label class="field">
               <span>throttle expo (0 to 1)</span>
               <input id="throttleExpo" type="number" min="0" max="1" step="0.01">
+            </label>
+            <label class="field">
+              <span>throttle limit</span>
+              <select id="throttleLimitType">
+                <option value="OFF">Off</option>
+                <option value="SCALE">Scale</option>
+                <option value="CLIP">Clip</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>throttle limit %</span>
+              <input id="throttleLimitPercent" type="number" min="1" max="100" step="1">
             </label>
           </div>
         </section>
@@ -123,7 +140,7 @@
           <div class="section-head">
             <div>
               <h2>throttle curve</h2>
-              <p>Hover point, throttle mid, and throttle expo.</p>
+              <p>Hover point, throttle mid, throttle expo, and throttle limit.</p>
             </div>
           </div>
           <div class="throttle-preview">

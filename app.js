@@ -8,6 +8,7 @@ const AXIS_COLORS = {
   pitch: "#86c7ff",
   yaw: "#ffbf7e",
 };
+const THROTTLE_LIMIT_TYPES = new Set(["OFF", "SCALE", "CLIP"]);
 
 const RATE_MODELS = {
   ACTUAL: {
@@ -32,6 +33,7 @@ const RATE_MODELS = {
 
 const DEFAULT_STATE = {
   pilotName: "dean",
+  modelName: "air75",
   setupName: "indoor daily",
   bfVersion: "2025.12.1",
   rateType: "ACTUAL",
@@ -45,6 +47,8 @@ const DEFAULT_STATE = {
     hover: 0.5,
     mid: 0.5,
     expo: 0.25,
+    limitType: "OFF",
+    limitPercent: 100,
   },
 };
 
@@ -52,6 +56,7 @@ const elements = {
   subtitle: document.querySelector(".subtitle"),
   heroMarkers: document.querySelector(".hero-markers"),
   pilotName: document.getElementById("pilotName"),
+  modelName: document.getElementById("modelName"),
   setupName: document.getElementById("setupName"),
   bfVersion: document.getElementById("bfVersion"),
   rateType: document.getElementById("rateType"),
@@ -60,6 +65,8 @@ const elements = {
   throttleHover: document.getElementById("throttleHover"),
   throttleMid: document.getElementById("throttleMid"),
   throttleExpo: document.getElementById("throttleExpo"),
+  throttleLimitType: document.getElementById("throttleLimitType"),
+  throttleLimitPercent: document.getElementById("throttleLimitPercent"),
   throttleCanvas: document.getElementById("throttleCanvas"),
   throttleStats: document.getElementById("throttleStats"),
   curveCanvas: document.getElementById("curveCanvas"),
@@ -70,6 +77,7 @@ const elements = {
   graphDescription: document.getElementById("graphDescription"),
   graphStats: document.getElementById("graphStats"),
   summaryPilot: document.getElementById("summaryPilot"),
+  summaryModel: document.getElementById("summaryModel"),
   summaryName: document.getElementById("summaryName"),
   summaryType: document.getElementById("summaryType"),
   summaryRoll: document.getElementById("summaryRoll"),
@@ -109,6 +117,11 @@ function bindEvents() {
     refreshAll();
   });
 
+  elements.modelName.addEventListener("input", () => {
+    state.modelName = sanitizeModelName(elements.modelName.value);
+    refreshAll();
+  });
+
   elements.setupName.addEventListener("input", () => {
     state.setupName = sanitizeSetupName(elements.setupName.value);
     refreshAll();
@@ -137,6 +150,16 @@ function bindEvents() {
 
   elements.throttleExpo.addEventListener("input", () => {
     state.throttle.expo = clampNumber(Number(elements.throttleExpo.value), 0, 1);
+    refreshAll();
+  });
+
+  elements.throttleLimitType.addEventListener("change", () => {
+    state.throttle.limitType = normalizeThrottleLimitType(elements.throttleLimitType.value);
+    refreshAll();
+  });
+
+  elements.throttleLimitPercent.addEventListener("input", () => {
+    state.throttle.limitPercent = clampNumber(Number(elements.throttleLimitPercent.value), 1, 100);
     refreshAll();
   });
 
@@ -184,6 +207,7 @@ function bindEvents() {
 function renderAxisInputs() {
   const model = RATE_MODELS[state.rateType];
   elements.pilotName.value = state.pilotName;
+  elements.modelName.value = state.modelName;
   elements.setupName.value = state.setupName;
   elements.bfVersion.value = state.bfVersion;
   elements.rateType.value = state.rateType;
@@ -191,6 +215,8 @@ function renderAxisInputs() {
   elements.throttleHover.value = formatDecimal(state.throttle.hover, 2);
   elements.throttleMid.value = formatDecimal(state.throttle.mid, 2);
   elements.throttleExpo.value = formatDecimal(state.throttle.expo, 2);
+  elements.throttleLimitType.value = state.throttle.limitType;
+  elements.throttleLimitPercent.value = String(Math.round(state.throttle.limitPercent));
   elements.graphDescription.textContent = model.summary;
   elements.axisGrid.innerHTML = AXES.map((axis) => renderAxisBlock(axis, model)).join("");
 
@@ -362,7 +388,8 @@ function drawThrottleGraph() {
   const hover = state.throttle.hover;
   const mid = state.throttle.mid;
   const expo = state.throttle.expo;
-  const curve = computeThrottleCurveParams(plotWidth, plotHeight, mid, hover, expo);
+  const limitType = state.throttle.limitType;
+  const limitPercent = state.throttle.limitPercent;
 
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#0b0a11";
@@ -395,15 +422,41 @@ function drawThrottleGraph() {
   ctx.strokeStyle = "#ffbf7e";
   ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.moveTo(0, plotHeight);
-  ctx.quadraticCurveTo(curve.midXl, curve.midYl, curve.midX, curve.midY);
-  ctx.quadraticCurveTo(curve.midXr, curve.midYr, plotWidth, curve.topY);
+  for (let step = 0; step <= 100; step += 1) {
+    const stick = step / 100;
+    const output = sampleThrottle(stick);
+    const x = plotWidth * stick;
+    const y = plotHeight * (1 - output);
+    if (step === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
   ctx.stroke();
 
+  const midOutput = sampleThrottle(mid);
   ctx.fillStyle = "#ffbf7e";
   ctx.beginPath();
-  ctx.arc(curve.midX, curve.midY, 4, 0, Math.PI * 2);
+  ctx.arc(plotWidth * mid, plotHeight * (1 - midOutput), 4, 0, Math.PI * 2);
   ctx.fill();
+
+  if (limitType !== "OFF") {
+    ctx.strokeStyle = "rgba(134,199,255,0.5)";
+    ctx.lineWidth = 1.5;
+    if (limitType === "SCALE") {
+      ctx.beginPath();
+      ctx.moveTo(plotWidth, plotHeight);
+      ctx.lineTo(plotWidth, plotHeight * (1 - limitPercent / 100));
+      ctx.stroke();
+    } else {
+      const clipY = plotHeight * (1 - limitPercent / 100);
+      ctx.beginPath();
+      ctx.moveTo(0, clipY);
+      ctx.lineTo(plotWidth, clipY);
+      ctx.stroke();
+    }
+  }
 
   ctx.fillStyle = "#a79eb8";
   ctx.font = '10px "JetBrains Mono"';
@@ -417,23 +470,48 @@ function drawThrottleGraph() {
     `<span class="graph-stat"><span style="color:#ffbf7e">hover point</span> ${formatPercent(hover)}</span>`,
     `<span class="graph-stat"><span style="color:#ffbf7e">throttle mid</span> ${formatPercent(mid)}</span>`,
     `<span class="graph-stat"><span style="color:#ffbf7e">throttle expo</span> ${formatDisplayValue(expo)}</span>`,
+    `<span class="graph-stat"><span style="color:#86c7ff">limit</span> ${formatThrottleLimitLabel()}</span>`,
   ].join("");
 }
 
-function computeThrottleCurveParams(canvasWidth, canvasHeight, mid, hover, expo) {
-  const topY = 0;
-  const midX = canvasWidth * mid;
-  const midY = canvasHeight * (1 - hover);
+function sampleThrottle(input) {
+  const base = sampleThrottleBase(
+    clampNumber(input, 0, 1),
+    state.throttle.mid,
+    state.throttle.hover,
+    state.throttle.expo,
+  );
+  return applyThrottleLimit(base, state.throttle.limitType, state.throttle.limitPercent);
+}
 
-  return {
-    topY,
-    midX,
-    midY,
-    midXl: midX * 0.5,
-    midYl: canvasHeight - (canvasHeight - midY) * 0.5 * (expo + 1),
-    midXr: (canvasWidth + midX) * 0.5,
-    midYr: topY + (midY - topY) * 0.5 * (expo + 1),
-  };
+function sampleThrottleBase(input, mid, hover, expo) {
+  const safeMid = clampNumber(mid, 0.01, 0.99);
+  const leftControlY = clampNumber(hover * 0.5 * (expo + 1), 0, 1);
+  const rightControlY = clampNumber(1 - (1 - hover) * 0.5 * (expo + 1), 0, 1);
+
+  if (input <= safeMid) {
+    const t = input / safeMid;
+    return quadraticBezier(0, leftControlY, hover, t);
+  }
+
+  const t = (input - safeMid) / (1 - safeMid);
+  return quadraticBezier(hover, rightControlY, 1, t);
+}
+
+function quadraticBezier(start, control, end, t) {
+  const inverse = 1 - t;
+  return inverse * inverse * start + 2 * inverse * t * control + t * t * end;
+}
+
+function applyThrottleLimit(output, type, percent) {
+  const limit = clampNumber(percent, 1, 100) / 100;
+  if (type === "SCALE") {
+    return output * limit;
+  }
+  if (type === "CLIP") {
+    return Math.min(output, limit);
+  }
+  return output;
 }
 
 function getPlottedAxes() {
@@ -499,6 +577,7 @@ function updateCliOutput() {
   const lines = [
     "rateprofile 0",
     `# ${getFullShareLabel()}`,
+    `# model ${state.modelName}`,
     `# Betaflight ${state.bfVersion}`,
     `set rates_type = ${state.rateType}`,
   ];
@@ -513,12 +592,15 @@ function updateCliOutput() {
   lines.push(`set thr_hover = ${Math.round(state.throttle.hover * 100)}`);
   lines.push(`set thr_mid = ${Math.round(state.throttle.mid * 100)}`);
   lines.push(`set thr_expo = ${Math.round(state.throttle.expo * 100)}`);
+  lines.push(`set throttle_limit_type = ${state.throttle.limitType}`);
+  lines.push(`set throttle_limit_percent = ${Math.round(state.throttle.limitPercent)}`);
   lines.push("save");
   elements.cliOutput.value = lines.join("\n");
 }
 
 function updateSummary() {
   elements.summaryPilot.textContent = getShareLabel();
+  elements.summaryModel.textContent = state.modelName;
   elements.summaryName.textContent = state.setupName;
   elements.summaryType.textContent = RATE_MODELS[state.rateType].label;
   elements.summaryRoll.textContent = `${Math.round(sampleAxis("roll", 1))} deg/s`;
@@ -582,6 +664,10 @@ function renderThrottleCard() {
           <span>throttle expo</span>
           <strong>${formatDisplayValue(state.throttle.expo)}</strong>
         </div>
+        <div class="share-rate-row">
+          <span>throttle limit</span>
+          <strong>${formatThrottleLimitLabel()}</strong>
+        </div>
       </div>
     </article>
   `;
@@ -590,6 +676,7 @@ function renderThrottleCard() {
 function serializeState(current) {
   const params = new URLSearchParams();
   params.set("pilot", current.pilotName);
+  params.set("model", current.modelName);
   params.set("name", current.setupName);
   params.set("bf", current.bfVersion);
   params.set("type", current.rateType);
@@ -597,6 +684,8 @@ function serializeState(current) {
   params.set("thrHover", formatDecimal(current.throttle.hover, 2));
   params.set("thrMid", formatDecimal(current.throttle.mid, 2));
   params.set("thrEx", formatDecimal(current.throttle.expo, 2));
+  params.set("thrLimitType", current.throttle.limitType);
+  params.set("thrLimit", formatDecimal(current.throttle.limitPercent, 0));
 
   for (const axis of AXES) {
     const values = current.axes[axis];
@@ -614,6 +703,10 @@ function encodeCompactState(current) {
     Math.round(current.throttle.mid * 100),
     Math.round(current.throttle.expo * 100),
   ];
+  const throttleLimit = [
+    encodeThrottleLimitType(current.throttle.limitType),
+    Math.round(current.throttle.limitPercent),
+  ];
   const axes = AXES.map((axis) => {
     const values = current.axes[axis];
     return [
@@ -624,13 +717,15 @@ function encodeCompactState(current) {
   });
 
   return [
-    "v1",
+    "v2",
     encodeURIComponent(current.pilotName),
+    encodeURIComponent(current.modelName),
     encodeURIComponent(current.setupName),
     encodeURIComponent(current.bfVersion),
     current.rateType === "ACTUAL" ? "A" : "B",
     current.linkedAxes ? "1" : "0",
     encodeCompactNumberGroup(throttle),
+    encodeCompactNumberGroup(throttleLimit),
     ...axes.map((values) => encodeCompactNumberGroup(values)),
   ].join("~");
 }
@@ -638,6 +733,10 @@ function encodeCompactState(current) {
 function decodeCompactState(encoded) {
   if (!encoded) {
     return null;
+  }
+
+  if (encoded.startsWith("v2~")) {
+    return decodeCompactStateV2(encoded);
   }
 
   if (encoded.startsWith("v1~")) {
@@ -669,6 +768,7 @@ function decodeCompactStateV1(encoded) {
 
     return {
       p: decodeURIComponent(parts[1]),
+      m: DEFAULT_STATE.modelName,
       n: decodeURIComponent(parts[2]),
       b: decodeURIComponent(parts[3]),
       t: rateType,
@@ -677,6 +777,48 @@ function decodeCompactStateV1(encoded) {
         (throttle[0] ?? 50) / 100,
         (throttle[1] ?? 50) / 100,
         (throttle[2] ?? 25) / 100,
+      ],
+      a: axes.map((values, index) => {
+        const defaults = DEFAULT_STATE.axes[AXES[index]];
+        return [
+          (values[0] ?? Math.round(defaults.rcRate * 10)) / 10,
+          values[1] ?? Math.round(defaults.sRate),
+          (values[2] ?? Math.round(defaults.expo * 100)) / 100,
+        ];
+      }),
+    };
+  } catch (_error) {
+    return null;
+  }
+}
+
+function decodeCompactStateV2(encoded) {
+  try {
+    const parts = encoded.split("~");
+    if (parts.length !== 12 || parts[0] !== "v2") {
+      return null;
+    }
+
+    const rateType = parts[5] === "A" ? "ACTUAL" : "BETAFLIGHT";
+    const throttle = decodeCompactNumberGroup(parts[7]);
+    const throttleLimit = decodeCompactNumberGroup(parts[8]);
+    const axes = parts.slice(9).map((group) => decodeCompactNumberGroup(group));
+
+    return {
+      p: decodeURIComponent(parts[1]),
+      m: decodeURIComponent(parts[2]),
+      n: decodeURIComponent(parts[3]),
+      b: decodeURIComponent(parts[4]),
+      t: rateType,
+      l: parts[6] === "1" ? 1 : 0,
+      th: [
+        (throttle[0] ?? 50) / 100,
+        (throttle[1] ?? 50) / 100,
+        (throttle[2] ?? 25) / 100,
+      ],
+      tl: [
+        decodeThrottleLimitType(throttleLimit[0]),
+        throttleLimit[1] ?? 100,
       ],
       a: axes.map((values, index) => {
         const defaults = DEFAULT_STATE.axes[AXES[index]];
@@ -710,6 +852,7 @@ function applyCompactState(payload, nextState) {
   }
 
   nextState.pilotName = sanitizePilotName(payload.p || nextState.pilotName);
+  nextState.modelName = sanitizeModelName(payload.m || nextState.modelName);
   nextState.setupName = sanitizeSetupName(payload.n || nextState.setupName);
   nextState.bfVersion = sanitizeVersion(payload.b || nextState.bfVersion);
   nextState.linkedAxes = payload.l !== 0;
@@ -718,6 +861,13 @@ function applyCompactState(payload, nextState) {
     nextState.throttle.hover = Number.isFinite(payload.th[0]) ? payload.th[0] : nextState.throttle.hover;
     nextState.throttle.mid = Number.isFinite(payload.th[1]) ? payload.th[1] : nextState.throttle.mid;
     nextState.throttle.expo = Number.isFinite(payload.th[2]) ? payload.th[2] : nextState.throttle.expo;
+  }
+
+  if (Array.isArray(payload.tl)) {
+    nextState.throttle.limitType = normalizeThrottleLimitType(payload.tl[0]);
+    nextState.throttle.limitPercent = Number.isFinite(payload.tl[1])
+      ? payload.tl[1]
+      : nextState.throttle.limitPercent;
   }
 
   if (Array.isArray(payload.a)) {
@@ -765,6 +915,7 @@ function loadStateFromUrl() {
   }
 
   nextState.pilotName = sanitizePilotName(params.get("pilot") || nextState.pilotName);
+  nextState.modelName = sanitizeModelName(params.get("model") || nextState.modelName);
   nextState.setupName = sanitizeSetupName(params.get("name") || nextState.setupName);
   nextState.bfVersion = sanitizeVersion(params.get("bf") || nextState.bfVersion);
 
@@ -775,6 +926,8 @@ function loadStateFromUrl() {
   nextState.throttle.hover = readNumberParam(params, "thrHover", nextState.throttle.hover);
   nextState.throttle.mid = readNumberParam(params, "thrMid", nextState.throttle.mid);
   nextState.throttle.expo = readNumberParam(params, "thrEx", nextState.throttle.expo);
+  nextState.throttle.limitType = normalizeThrottleLimitType(params.get("thrLimitType") || nextState.throttle.limitType);
+  nextState.throttle.limitPercent = readNumberParam(params, "thrLimit", nextState.throttle.limitPercent);
 
   for (const axis of AXES) {
     nextState.axes[axis].rcRate = readNumberParam(params, `${axis}Rc`, nextState.axes[axis].rcRate);
@@ -789,11 +942,14 @@ function loadStateFromUrl() {
 function sanitizeState(current) {
   const fields = RATE_MODELS[current.rateType].fields;
   current.pilotName = sanitizePilotName(current.pilotName);
+  current.modelName = sanitizeModelName(current.modelName);
   current.setupName = sanitizeSetupName(current.setupName);
   current.bfVersion = sanitizeVersion(current.bfVersion);
   current.throttle.hover = clampNumber(current.throttle.hover, 0, 1);
   current.throttle.mid = clampNumber(current.throttle.mid, 0, 1);
   current.throttle.expo = clampNumber(current.throttle.expo, 0, 1);
+  current.throttle.limitType = normalizeThrottleLimitType(current.throttle.limitType);
+  current.throttle.limitPercent = clampNumber(current.throttle.limitPercent, 1, 100);
   for (const axis of AXES) {
     for (const field of fields) {
       current.axes[axis][field.key] = clampNumber(current.axes[axis][field.key], field.min, field.max);
@@ -820,7 +976,7 @@ function loadViewFromUrl() {
 
 function hasShareableStateInUrl() {
   const params = new URLSearchParams(window.location.search);
-  return params.has("s") || params.has("type") || params.has("pilot") || params.has("name");
+  return params.has("s") || params.has("type") || params.has("pilot") || params.has("model") || params.has("name");
 }
 
 function applyViewMode() {
@@ -849,6 +1005,10 @@ function sanitizePilotName(value) {
   return `${value || ""}`.trim().replace(/\s+/g, " ").slice(0, 40) || "pilot";
 }
 
+function sanitizeModelName(value) {
+  return `${value || ""}`.trim().replace(/\s+/g, " ").slice(0, 40) || "air75";
+}
+
 function sanitizeSetupName(value) {
   return `${value || ""}`.trim().replace(/\s+/g, " ").slice(0, 60) || "untitled setup";
 }
@@ -864,6 +1024,13 @@ function getShareLabel() {
 
 function getFullShareLabel() {
   return `${getShareLabel()} · ${state.setupName}`;
+}
+
+function formatThrottleLimitLabel() {
+  if (state.throttle.limitType === "OFF") {
+    return "off";
+  }
+  return `${state.throttle.limitType.toLowerCase()} ${Math.round(state.throttle.limitPercent)}%`;
 }
 
 function formatDecimal(value, digits) {
@@ -884,6 +1051,41 @@ function clampNumber(value, min, max) {
     return min;
   }
   return Math.min(max, Math.max(min, value));
+}
+
+function normalizeThrottleLimitType(value) {
+  const normalized = `${value || ""}`.trim().toUpperCase();
+  if (normalized === "1") {
+    return "SCALE";
+  }
+  if (normalized === "2") {
+    return "CLIP";
+  }
+  if (normalized === "0") {
+    return "OFF";
+  }
+  return THROTTLE_LIMIT_TYPES.has(normalized) ? normalized : "OFF";
+}
+
+function encodeThrottleLimitType(value) {
+  const normalized = normalizeThrottleLimitType(value);
+  if (normalized === "SCALE") {
+    return 1;
+  }
+  if (normalized === "CLIP") {
+    return 2;
+  }
+  return 0;
+}
+
+function decodeThrottleLimitType(value) {
+  if (value === 1) {
+    return "SCALE";
+  }
+  if (value === 2) {
+    return "CLIP";
+  }
+  return "OFF";
 }
 
 function isDefaultState(current) {
@@ -1009,6 +1211,16 @@ function applyCliValue(key, rawValue) {
   if (normalizedKey === "thr_expo") {
     state.throttle.expo = parseCliPercent(rawValue);
     return true;
+  }
+
+  if (normalizedKey === "throttle_limit_type") {
+    state.throttle.limitType = normalizeThrottleLimitType(rawValue);
+    return true;
+  }
+
+  if (normalizedKey === "throttle_limit_percent") {
+    state.throttle.limitPercent = clampNumber(Number(rawValue), 1, 100);
+    return Number.isFinite(Number(rawValue));
   }
 
   const axisMatch = normalizedKey.match(/^(roll|pitch|yaw)_(rc_rate|expo|srate)$/);

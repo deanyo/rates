@@ -8,8 +8,9 @@ The current version focuses on a practical GitHub Pages workflow:
 
 - set up `Actual` or `Betaflight` rates in the browser
 - add a pilot tag so shared links feel like named setups
+- add a model name so shared links carry the craft as well as the pilot
 - add a setup name and Betaflight version tag to shared state
-- include hover point, throttle mid, and throttle expo in shared state and CLI export
+- include hover point, throttle mid, throttle expo, and throttle limit in shared state and CLI export
 - inspect the curve graph live
 - inspect a throttle curve preview for modern Betaflight throttle shaping
 - share the exact setup via URL, with a read-only share view and an edit link back to the full tool
@@ -25,9 +26,9 @@ The current version focuses on a practical GitHub Pages workflow:
 - live graph
 - shareable URL state
 - pilot tag in shared setups
+- model name in shared setups
 - setup name and `bf` version tag
-- throttle mid and throttle expo fields
-- hover point, throttle mid, and throttle expo fields
+- hover point, throttle mid, throttle expo, and throttle limit fields
 - CLI export
 - CLI import
 
@@ -35,7 +36,7 @@ The current version focuses on a practical GitHub Pages workflow:
 
 - the tool is designed around Betaflight terminology and workflow
 - `Actual` and `Betaflight` are the supported rate models for now
-- throttle settings are handled as separate Betaflight-style decimal values
+- throttle settings are handled as Betaflight-style fields, including `throttle_limit_type` and `throttle_limit_percent`
 - the default Betaflight version uses the current calendar-based scheme, e.g. `2025.12.1`
 - shared URLs are meant to preserve Betaflight-oriented setup state, not simulate every possible FPV app format
 
@@ -43,6 +44,7 @@ The current version focuses on a practical GitHub Pages workflow:
 
 - Oscar Liang rates guide: https://oscarliang.com/rates/
 - Oscar Liang throttle mid/expo guide: https://oscarliang.com/throttle-mid-expo/
+- Oscar Liang throttle scale guide: https://oscarliang.com/throttle-scale/
 - Betaflight Profiles and Rate Profiles: https://www.betaflight.com/docs/development/Profiles
 - Betaflight CLI docs: https://www.betaflight.com/docs/development/Cli
 
