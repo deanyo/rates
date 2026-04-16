@@ -1051,7 +1051,10 @@ function formatThrottleLimitLabel() {
 
 function formatDecimal(value, digits) {
   const fixed = Number(value).toFixed(digits);
-  return fixed.replace(/\.?0+$/, "");
+  if (digits === 0 || !fixed.includes(".")) {
+    return fixed;
+  }
+  return fixed.replace(/\.0+$/, "").replace(/(\.\d*?[1-9])0+$/, "$1");
 }
 
 function formatDisplayValue(value) {
