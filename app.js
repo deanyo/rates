@@ -48,7 +48,7 @@ const DEFAULT_STATE = {
     mid: 0.5,
     expo: 0.15,
     limitType: "SCALE",
-    limitPercent: 8,
+    limitPercent: 80,
   },
 };
 
