@@ -64,6 +64,7 @@ const elements = {
   throttleStats: document.getElementById("throttleStats"),
   curveCanvas: document.getElementById("curveCanvas"),
   shareUrl: document.getElementById("shareUrl"),
+  shortAlias: document.getElementById("shortAlias"),
   shareLabel: document.getElementById("shareLabel"),
   cliOutput: document.getElementById("cliOutput"),
   graphDescription: document.getElementById("graphDescription"),
@@ -891,6 +892,8 @@ async function createShortLink() {
     return;
   }
 
+  const alias = sanitizeShortAlias(elements.shortAlias.value);
+
   try {
     const response = await fetch(`${SHORTLINK_API_BASE.replace(/\/$/, "")}/api/shorten`, {
       method: "POST",
@@ -899,10 +902,20 @@ async function createShortLink() {
       },
       body: JSON.stringify({
         state: encodeCompactState(state),
+        alias,
       }),
     });
 
     if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      if (payload?.error === "alias_taken") {
+        setStatus("that custom short link is already taken.");
+        return;
+      }
+      if (payload?.error === "invalid_alias") {
+        setStatus("custom short link must be 3-32 chars, lowercase letters, numbers, or hyphens.");
+        return;
+      }
       throw new Error(`shorten failed: ${response.status}`);
     }
 
@@ -916,6 +929,11 @@ async function createShortLink() {
   } catch (_error) {
     setStatus("failed to create short link.");
   }
+}
+
+function sanitizeShortAlias(value) {
+  const alias = `${value || ""}`.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+  return alias || "";
 }
 
 function importCliText(text) {

@@ -25,15 +25,38 @@ export default {
   },
 };
 
+const RESERVED_IDS = new Set([
+  "api",
+  "health",
+  "workers",
+  "worker",
+  "admin",
+  "static",
+]);
+
 async function handleShorten(request, env) {
   const body = await readJson(request);
   const state = `${body?.state || ""}`.trim();
+  const alias = sanitizeAlias(body?.alias);
 
   if (!/^v1~[A-Za-z0-9\-_.~%]+$/.test(state)) {
     return jsonResponse({ error: "invalid_state" }, 400, request, env);
   }
 
-  const id = await allocateShortId(env);
+  let id = alias;
+  if (alias) {
+    if (!isValidAlias(alias)) {
+      return jsonResponse({ error: "invalid_alias" }, 400, request, env);
+    }
+
+    const existing = await env.SHORTLINKS.get(alias);
+    if (existing) {
+      return jsonResponse({ error: "alias_taken" }, 409, request, env);
+    }
+  } else {
+    id = await allocateShortId(env);
+  }
+
   await env.SHORTLINKS.put(
     id,
     JSON.stringify({
@@ -56,7 +79,7 @@ async function handleShorten(request, env) {
 
 async function handleResolve(url, env) {
   const id = extractShortlinkId(url.pathname);
-  if (!/^[a-z0-9]{6,8}$/i.test(id || "")) {
+  if (!isResolvableId(id)) {
     return new Response("Not found", { status: 404 });
   }
 
@@ -83,7 +106,7 @@ function isShortlinkPath(pathname) {
   }
 
   const id = extractShortlinkId(pathname);
-  return /^[a-z0-9]{6,8}$/i.test(id || "");
+  return isResolvableId(id);
 }
 
 function extractShortlinkId(pathname) {
@@ -99,6 +122,9 @@ function extractShortlinkId(pathname) {
 async function allocateShortId(env) {
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const id = randomId(6);
+    if (RESERVED_IDS.has(id)) {
+      continue;
+    }
     const existing = await env.SHORTLINKS.get(id);
     if (!existing) {
       return id;
@@ -116,6 +142,18 @@ function randomId(length) {
     id += alphabet[byte % alphabet.length];
   }
   return id;
+}
+
+function sanitizeAlias(value) {
+  return `${value || ""}`.trim().toLowerCase();
+}
+
+function isValidAlias(alias) {
+  return /^[a-z0-9-]{3,32}$/.test(alias) && !RESERVED_IDS.has(alias);
+}
+
+function isResolvableId(id) {
+  return /^[a-z0-9-]{3,32}$/i.test(id || "") && !RESERVED_IDS.has((id || "").toLowerCase());
 }
 
 async function readJson(request) {
