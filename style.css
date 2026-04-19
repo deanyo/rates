@@ -535,6 +535,10 @@ body.share-view .main-grid {
   grid-template-columns: 1fr;
 }
 
+body.share-view .seo-copy {
+  display: none;
+}
+
 @media (max-width: 980px) {
   .main-grid,
   .field-grid,
