@@ -3,22 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Static browser tool for Betaflight and Actual rates, with live graphs, shareable URLs, and CLI export.">
+  <meta name="description" content="Betaflight rates page for FPV. Compare Actual and Betaflight rates, check the graph, import CLI, export CLI, and share a setup by link instead of screenshots.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://rates.fpvtools.co.uk/">
   <meta name="rates-shortlink-api" content="https://r.fpvtools.co.uk">
-  <meta property="og:title" content="rates">
-  <meta property="og:description" content="Dial in Betaflight and Actual rates in the browser, inspect the curve, and share the exact setup by URL.">
+  <meta property="og:title" content="rates | Betaflight rates page for FPV">
+  <meta property="og:description" content="Compare Actual and Betaflight rates, check the graph, import or export CLI, and share a setup by link instead of screenshots.">
   <meta property="og:type" content="website">
+  <meta property="og:url" content="https://rates.fpvtools.co.uk/">
+  <meta property="og:site_name" content="fpvtools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="rates | Betaflight rates page for FPV">
+  <meta name="twitter:description" content="Compare Actual and Betaflight rates, check the graph, import or export CLI, and share a setup by link instead of screenshots.">
   <meta name="theme-color" content="#121019">
-  <title>rates</title>
+  <title>rates | Betaflight rates page for FPV</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "rates",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web",
+      "url": "https://rates.fpvtools.co.uk/",
+      "description": "Betaflight rates page for FPV with rate and throttle graphs, CLI import and export, and share links instead of screenshots.",
+      "creator": {
+        "@type": "Person",
+        "name": "deanyo"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "GBP"
+      }
+    }
+  </script>
 </head>
 <body>
   <div class="shell">
     <header class="hero">
-      <h1 id="pageTitle">my rates</h1>
+      <h1 id="pageTitle">betaflight rates</h1>
       <p class="subtitle" hidden></p>
       <div class="hero-markers" hidden></div>
     </header>
@@ -35,7 +62,7 @@
       <div class="section-head">
         <div>
           <h2>shared setup</h2>
-          <p>Read the values, inspect the curve, or open the editor to make changes.</p>
+          <p>Check the values, look at the graph, or open it in the editor and change what you want.</p>
         </div>
       </div>
       <div class="share-focus-grid" id="shareFocusGrid"></div>
@@ -52,7 +79,7 @@
         <div class="section-head">
           <div>
             <h2>setup</h2>
-            <p>Set the pilot, version, rates, and throttle values.</p>
+            <p>Set the pilot tag, model, rate type, and throttle values.</p>
           </div>
         </div>
 
@@ -92,7 +119,7 @@
           <div class="section-head compact-head">
             <div>
               <h2>throttle</h2>
-              <p>Throttle settings are shared and exported with the setup, including Betaflight throttle limit.</p>
+              <p>Throttle settings are part of the share link and CLI export, including throttle limit.</p>
             </div>
           </div>
           <div class="field-grid throttle-grid">
@@ -156,7 +183,7 @@
         <div class="section-head">
           <div>
             <h2>share</h2>
-            <p>Copy a link that restores the current setup exactly.</p>
+            <p>Copy a link that opens this setup with the same values already loaded.</p>
           </div>
         </div>
         <label class="field">
@@ -179,7 +206,7 @@
         <div class="section-head">
           <div>
             <h2>cli export</h2>
-            <p>Copy this block into Betaflight CLI after selecting the right rate profile.</p>
+            <p>Copy this into Betaflight CLI after you pick the right rate profile.</p>
           </div>
         </div>
         <label class="field">
@@ -195,7 +222,7 @@
       <div class="section-head">
         <div>
           <h2>cli import</h2>
-          <p>Paste Betaflight CLI here to fill the UI from <code>set ...</code>, <code>diff</code>, or <code>dump</code> style output.</p>
+          <p>Paste Betaflight CLI here to fill the page from <code>set ...</code>, <code>diff</code>, or <code>dump</code>.</p>
         </div>
       </div>
       <label class="field">
@@ -209,8 +236,45 @@
       </section>
     </section>
 
+    <section class="card seo-copy">
+      <div class="section-head">
+        <div>
+          <h2>betaflight rates tool</h2>
+          <p>
+            rates is for comparing setups without passing screenshots around. It supports both Actual and Betaflight,
+            shows the graph live, and gives you a link another pilot can open directly.
+          </p>
+        </div>
+      </div>
+      <div class="seo-copy-grid">
+        <article>
+          <h3>what it covers</h3>
+          <p>
+            Compare roll, pitch, and yaw behavior, check throttle mid and expo, import Betaflight CLI, and export a
+            CLI block you can paste back after choosing the right rate profile.
+          </p>
+        </article>
+        <article>
+          <h3>why use it</h3>
+          <p>
+            A shared setup opens with the same values loaded, so it is easier to compare whoop, freestyle, or race
+            rates in Discord, Reddit, YouTube descriptions, and group chats without translating screenshots first.
+          </p>
+        </article>
+        <article>
+          <h3>scope</h3>
+          <p>
+            This is built around Betaflight first. It is not trying to cover every simulator format or every old
+            Betaflight edge case, and it is not pretending rates are anything other than personal preference.
+          </p>
+        </article>
+      </div>
+    </section>
+
     <footer class="footer">
       <a href="https://github.com/deanyo/rates" target="_blank" rel="noreferrer">src</a>
+      <span>·</span>
+      <a href="https://fpvtools.co.uk" rel="noreferrer">fpvtools</a>
       <span>·</span>
       <a href="https://www.reddit.com/user/deanyo/" target="_blank" rel="noreferrer">contact me</a>
     </footer>

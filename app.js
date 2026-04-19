@@ -991,9 +991,11 @@ function applyViewMode() {
 }
 
 function updatePageTitle() {
-  elements.pageTitle.textContent = isShareView ? getShareLabel() : "my rates";
+  elements.pageTitle.textContent = isShareView ? getShareLabel() : "fpv rates tool";
   elements.summaryPilotItem.hidden = isShareView;
-  document.title = isShareView ? getShareLabel() : "my rates";
+  document.title = isShareView
+    ? `${getShareLabel()} | shared FPV rates setup`
+    : "rates | FPV rates tool for Betaflight and Actual rates";
 }
 
 function readNumberParam(params, key, fallback) {

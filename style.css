@@ -152,6 +152,31 @@ body::before {
   margin-bottom: 22px;
 }
 
+.seo-copy {
+  margin-bottom: 22px;
+}
+
+.seo-copy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.seo-copy h3 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  text-transform: lowercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.seo-copy p {
+  color: #bbb2ce;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
 .field-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -515,6 +540,7 @@ body.share-view .main-grid {
   .field-grid,
   .axis-grid,
   .share-focus-grid,
+  .seo-copy-grid,
   .workflow-grid {
     grid-template-columns: 1fr;
   }
